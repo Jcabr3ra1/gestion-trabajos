@@ -15,10 +15,16 @@ const CICLO: Record<EstadoTrabajo, EstadoTrabajo> = {
 
 export function suscribirClientes(callback: (clientes: Cliente[]) => void) {
   const q = query(collection(db, COL), orderBy('creadoEn', 'asc'))
-  return onSnapshot(q, snapshot => {
-    const clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Cliente))
-    callback(clientes)
-  })
+  return onSnapshot(q,
+    snapshot => {
+      const clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Cliente))
+      callback(clientes)
+    },
+    error => {
+      console.error('Firestore:', error.code, error.message)
+      callback([])
+    }
+  )
 }
 
 export async function agregarCliente(data: Omit<Cliente, 'id' | 'creadoEn' | 'archivado'>): Promise<void> {
