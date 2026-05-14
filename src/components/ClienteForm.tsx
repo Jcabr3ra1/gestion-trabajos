@@ -151,7 +151,7 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
     return [...fijasActivas, ...otrasConvertidas]
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validar()) return
     const data = {
@@ -161,7 +161,11 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
       tutor: form.tutor,
       materias: editando ? construirMaterias() : [],
     }
-    editando ? actualizarCliente(clienteEditar!.id, data) : agregarCliente(data)
+    if (editando) {
+      await actualizarCliente(clienteEditar!.id, data)
+    } else {
+      await agregarCliente(data)
+    }
     onGuardado()
   }
 

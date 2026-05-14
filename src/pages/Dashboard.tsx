@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import type { Cliente } from '../types'
-import { getClientes, eliminarCliente, avanzarEstadoMateria, archivarCliente, desarchivarCliente } from '../utils/storage'
+import {
+  suscribirClientes, eliminarCliente,
+  avanzarEstadoMateria, archivarCliente, desarchivarCliente,
+} from '../utils/storage'
 import ClienteTabla from '../components/ClienteTabla'
 
 interface Props {
@@ -15,11 +18,17 @@ HOY.setHours(0, 0, 0, 0)
 
 export default function Dashboard({ onAgregar, onEditar }: Props) {
   const [clientes, setClientes] = useState<Cliente[]>([])
+  const [cargando, setCargando] = useState(true)
   const [busqueda, setBusqueda] = useState('')
   const [filtro, setFiltro] = useState<Filtro>('activos')
 
-  const reload = () => setClientes(getClientes())
-  useEffect(() => { reload() }, [])
+  useEffect(() => {
+    const unsub = suscribirClientes(data => {
+      setClientes(data)
+      setCargando(false)
+    })
+    return unsub
+  }, [])
 
   const activos = clientes.filter(c => !c.archivado)
   const todasMaterias = activos.flatMap(c => c.materias)
@@ -40,37 +49,39 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
       c.usuario.toLowerCase().includes(txt) ||
       c.tutor.toLowerCase().includes(txt)
     if (!coincide) return false
-
     if (filtro === 'archivados') return c.archivado
-    if (c.archivado) return false  // los archivados solo se ven en su filtro
-
+    if (c.archivado) return false
     if (filtro === 'vencidos')    return c.materias.some(m => m.estado === 'pendiente' && new Date(m.fechaCierre + 'T00:00:00') < HOY)
     if (filtro === 'cargados')    return c.materias.some(m => m.estado === 'cargado')
     if (filtro === 'calificados') return c.materias.length > 0 && c.materias.every(m => m.estado === 'calificado')
-    return true // 'activos'
+    return true
   })
 
-  const handleAvanzar = (clienteId: string, materiaId: string) => {
-    avanzarEstadoMateria(clienteId, materiaId)
-    reload()
+  const handleAvanzar = async (clienteId: string, materiaId: string) => {
+    const cliente = clientes.find(c => c.id === clienteId)
+    if (!cliente) return
+    await avanzarEstadoMateria(clienteId, materiaId, cliente.materias)
   }
-  const handleEliminar = (id: string) => {
+
+  const handleEliminar = async (id: string) => {
     if (!window.confirm('¿Eliminar este estudiante y todas sus materias?')) return
-    eliminarCliente(id)
-    reload()
+    await eliminarCliente(id)
   }
-  const handleArchivar = (id: string) => {
-    archivarCliente(id)
-    reload()
-  }
-  const handleDesarchivar = (id: string) => {
-    desarchivarCliente(id)
-    reload()
+
+  const handleArchivar   = async (id: string) => { await archivarCliente(id) }
+  const handleDesarchivar = async (id: string) => { await desarchivarCliente(id) }
+
+  if (cargando) {
+    return (
+      <div className="loading">
+        <div className="loading-spinner" />
+        <p>Cargando datos...</p>
+      </div>
+    )
   }
 
   return (
     <div className="dashboard">
-      {/* Stat cards */}
       <div className="stat-cards">
         <div className="stat-card">
           <div className="stat-icon stat-icon--blue">👥</div>
@@ -109,7 +120,6 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="toolbar">
         <div className="toolbar-left">
           <button className="btn-nuevo" onClick={onAgregar}>＋ Nuevo estudiante</button>
@@ -126,11 +136,11 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
         </div>
         <div className="filtros">
           {([
-            ['activos',      'Activos'],
-            ['vencidos',     '⚠ Vencidos'],
-            ['cargados',     '⬆ Cargados'],
-            ['calificados',  '✓ Calificados'],
-            ['archivados',   `📁 Archivados${stats.archivados > 0 ? ` (${stats.archivados})` : ''}`],
+            ['activos',     'Activos'],
+            ['vencidos',    '⚠ Vencidos'],
+            ['cargados',    '⬆ Cargados'],
+            ['calificados', '✓ Calificados'],
+            ['archivados',  `📁 Archivados${stats.archivados > 0 ? ` (${stats.archivados})` : ''}`],
           ] as [Filtro, string][]).map(([f, label]) => (
             <button
               key={f}
@@ -143,14 +153,13 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
         </div>
       </div>
 
-      {/* Tabla o vacío */}
       <div className="tabla-container">
         {filtrados.length === 0 ? (
           <div className="empty-state">
-            {clientes.filter(c => !c.archivado).length === 0
+            {activos.length === 0
               ? <><div className="empty-icon">📋</div><p className="empty-title">Sin estudiantes</p><p className="empty-sub">Haz clic en <strong>＋ Nuevo estudiante</strong> para comenzar.</p></>
               : filtro === 'archivados'
-              ? <><div className="empty-icon">📁</div><p className="empty-title">Sin archivados</p><p className="empty-sub">Los estudiantes con todas las materias calificadas aparecerán aquí al archivarlos.</p></>
+              ? <><div className="empty-icon">📁</div><p className="empty-title">Sin archivados</p><p className="empty-sub">Los estudiantes con todas las materias calificadas aparecerán aquí.</p></>
               : <><div className="empty-icon">🔍</div><p className="empty-title">Sin resultados</p><p className="empty-sub">No se encontró "<strong>{busqueda}</strong>".</p></>
             }
           </div>

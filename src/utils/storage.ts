@@ -1,55 +1,55 @@
+import {
+  collection, doc, addDoc, updateDoc, deleteDoc,
+  onSnapshot, query, orderBy,
+} from 'firebase/firestore'
+import { db } from './firebase'
 import type { Cliente, Materia, EstadoTrabajo } from '../types'
 
-const KEY = 'gestion_clientes'
+const COL = 'clientes'
 
 const CICLO: Record<EstadoTrabajo, EstadoTrabajo> = {
-  pendiente: 'cargado',
-  cargado:   'calificado',
+  pendiente:  'cargado',
+  cargado:    'calificado',
   calificado: 'pendiente',
 }
 
-export function getClientes(): Cliente[] {
-  const raw = localStorage.getItem(KEY)
-  if (!raw) return []
-  try { return JSON.parse(raw) as Cliente[] } catch { return [] }
+export function suscribirClientes(callback: (clientes: Cliente[]) => void) {
+  const q = query(collection(db, COL), orderBy('creadoEn', 'asc'))
+  return onSnapshot(q, snapshot => {
+    const clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Cliente))
+    callback(clientes)
+  })
 }
 
-function saveClientes(clientes: Cliente[]): void {
-  localStorage.setItem(KEY, JSON.stringify(clientes))
+export async function agregarCliente(data: Omit<Cliente, 'id' | 'creadoEn' | 'archivado'>): Promise<void> {
+  await addDoc(collection(db, COL), {
+    ...data,
+    archivado: false,
+    creadoEn: new Date().toISOString(),
+  })
 }
 
-export function agregarCliente(data: Omit<Cliente, 'id' | 'creadoEn' | 'archivado'>): Cliente {
-  const nuevo: Cliente = { ...data, archivado: false, id: crypto.randomUUID(), creadoEn: new Date().toISOString() }
-  saveClientes([...getClientes(), nuevo])
-  return nuevo
+export async function actualizarCliente(id: string, cambios: Partial<Omit<Cliente, 'id' | 'creadoEn'>>): Promise<void> {
+  await updateDoc(doc(db, COL, id), { ...cambios })
 }
 
-export function archivarCliente(id: string): void {
-  saveClientes(getClientes().map(c => c.id === id ? { ...c, archivado: true } : c))
+export async function eliminarCliente(id: string): Promise<void> {
+  await deleteDoc(doc(db, COL, id))
 }
 
-export function desarchivarCliente(id: string): void {
-  saveClientes(getClientes().map(c => c.id === id ? { ...c, archivado: false } : c))
+export async function avanzarEstadoMateria(clienteId: string, materiaId: string, materias: Materia[]): Promise<void> {
+  const actualizadas = materias.map(m =>
+    m.id === materiaId ? { ...m, estado: CICLO[m.estado] } : m
+  )
+  await updateDoc(doc(db, COL, clienteId), { materias: actualizadas })
 }
 
-export function actualizarCliente(id: string, cambios: Partial<Omit<Cliente, 'id' | 'creadoEn'>>): void {
-  saveClientes(getClientes().map(c => c.id === id ? { ...c, ...cambios } : c))
+export async function archivarCliente(id: string): Promise<void> {
+  await updateDoc(doc(db, COL, id), { archivado: true })
 }
 
-export function eliminarCliente(id: string): void {
-  saveClientes(getClientes().filter(c => c.id !== id))
-}
-
-export function avanzarEstadoMateria(clienteId: string, materiaId: string): void {
-  saveClientes(getClientes().map(c => {
-    if (c.id !== clienteId) return c
-    return {
-      ...c,
-      materias: c.materias.map(m =>
-        m.id === materiaId ? { ...m, estado: CICLO[m.estado] } : m
-      ),
-    }
-  }))
+export async function desarchivarCliente(id: string): Promise<void> {
+  await updateDoc(doc(db, COL, id), { archivado: false })
 }
 
 export function nuevaMateria(nombre: string, fechaCierre: string): Materia {
