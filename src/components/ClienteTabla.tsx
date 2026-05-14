@@ -6,35 +6,62 @@ interface Props {
   onAvanzarMateria: (clienteId: string, materiaId: string) => void
   onEditar: (cliente: Cliente) => void
   onEliminar: (id: string) => void
+  onArchivar: (id: string) => void
+  onDesarchivar: (id: string) => void
 }
 
-const HOY = new Date().toISOString().split('T')[0]
+const HOY = new Date()
+HOY.setHours(0, 0, 0, 0)
 
 type EstadoReal = EstadoTrabajo | 'vencido'
 
 function getEstadoReal(m: { estado: EstadoTrabajo; fechaCierre: string }): EstadoReal {
   if (m.estado !== 'pendiente') return m.estado
-  if (m.fechaCierre < HOY) return 'vencido'
+  const cierre = new Date(m.fechaCierre + 'T00:00:00')
+  if (cierre < HOY) return 'vencido'
   return 'pendiente'
 }
 
+function diasRestantes(fechaCierre: string): number {
+  const cierre = new Date(fechaCierre + 'T00:00:00')
+  return Math.round((cierre.getTime() - HOY.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+function Countdown({ fechaCierre, estado }: { fechaCierre: string; estado: EstadoTrabajo }) {
+  if (estado !== 'pendiente') return null
+  const dias = diasRestantes(fechaCierre)
+
+  if (dias < 0) {
+    return <span className="countdown countdown--vencido">Venció hace {Math.abs(dias)} día{Math.abs(dias) !== 1 ? 's' : ''}</span>
+  }
+  if (dias === 0) return <span className="countdown countdown--hoy">¡Vence hoy!</span>
+  if (dias <= 5)  return <span className="countdown countdown--urgente">⚠ {dias} día{dias !== 1 ? 's' : ''}</span>
+  if (dias <= 15) return <span className="countdown countdown--pronto">{dias} días</span>
+  return <span className="countdown countdown--ok">{dias} días</span>
+}
+
 const ESTADO_CONFIG: Record<EstadoReal, { label: string; clase: string; siguiente: string }> = {
-  pendiente:  { label: 'Pendiente',   clase: 'badge--pendiente',  siguiente: '→ Marcar cargado' },
-  cargado:    { label: 'Cargado',     clase: 'badge--cargado',    siguiente: '→ Marcar calificado' },
-  calificado: { label: 'Calificado',  clase: 'badge--calificado', siguiente: '↺ Resetear' },
-  vencido:    { label: 'Vencido',     clase: 'badge--vencido',    siguiente: '→ Marcar cargado' },
+  pendiente:  { label: 'Pendiente',  clase: 'badge--pendiente',  siguiente: '→ Marcar cargado' },
+  cargado:    { label: 'Cargado',    clase: 'badge--cargado',    siguiente: '→ Marcar calificado' },
+  calificado: { label: 'Calificado', clase: 'badge--calificado', siguiente: '↺ Resetear' },
+  vencido:    { label: 'Vencido',    clase: 'badge--vencido',    siguiente: '→ Marcar cargado' },
 }
 
 function resumenCliente(c: Cliente) {
   if (c.materias.length === 0) return { label: 'Sin materias', clase: 'resumen--sin' }
-  const vencidas    = c.materias.filter(m => m.estado === 'pendiente' && m.fechaCierre < HOY).length
+  const hoy = new Date(); hoy.setHours(0,0,0,0)
+  const vencidas    = c.materias.filter(m => m.estado === 'pendiente' && new Date(m.fechaCierre + 'T00:00:00') < hoy).length
   const calificadas = c.materias.filter(m => m.estado === 'calificado').length
   const cargadas    = c.materias.filter(m => m.estado === 'cargado').length
   const total       = c.materias.length
-  if (vencidas > 0)           return { label: `${vencidas} vencida${vencidas > 1 ? 's' : ''}`, clase: 'resumen--vencido' }
-  if (calificadas === total)  return { label: 'Todas calificadas', clase: 'resumen--calificado' }
-  if (cargadas > 0)           return { label: `${cargadas} cargada${cargadas > 1 ? 's' : ''}`, clase: 'resumen--cargado' }
+  if (vencidas > 0)          return { label: `${vencidas} vencida${vencidas > 1 ? 's' : ''}`, clase: 'resumen--vencido' }
+  if (calificadas === total) return { label: 'Todas calificadas', clase: 'resumen--calificado' }
+  if (cargadas > 0)          return { label: `${cargadas} cargada${cargadas > 1 ? 's' : ''}`, clase: 'resumen--cargado' }
   return { label: 'Sin iniciar', clase: 'resumen--pendiente' }
+}
+
+function todasCalificadas(c: Cliente): boolean {
+  return c.materias.length > 0 && c.materias.every(m => m.estado === 'calificado')
 }
 
 function formatFecha(iso: string) {
@@ -43,7 +70,7 @@ function formatFecha(iso: string) {
   })
 }
 
-export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onEliminar }: Props) {
+export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onEliminar, onArchivar, onDesarchivar }: Props) {
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set())
 
   const toggle = (id: string) =>
@@ -65,35 +92,42 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
             <th>Tutor</th>
             <th>Materias</th>
             <th>Estado</th>
-            <th style={{ width: 140 }}>Acciones</th>
+            <th style={{ width: 180 }}>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {clientes.map((c, i) => {
-            const abierto = expandidos.has(c.id)
-            const resumen = resumenCliente(c)
+            const abierto  = expandidos.has(c.id)
+            const resumen  = resumenCliente(c)
+            const listo    = todasCalificadas(c)
 
             return (
               <Fragment key={c.id}>
-                <tr className={`tr-main ${abierto ? 'tr-main--open' : ''}`} onClick={() => toggle(c.id)}>
+                <tr className={`tr-main ${abierto ? 'tr-main--open' : ''} ${c.archivado ? 'tr-main--archivado' : ''}`}
+                  onClick={() => toggle(c.id)}>
                   <td className="td-num">{i + 1}</td>
                   <td className="td-arrow">{abierto ? '▾' : '▸'}</td>
-                  <td className="td-nombre">{c.nombre || <span className="td-empty">Sin nombre</span>}</td>
+                  <td className="td-nombre">
+                    {c.nombre || <span className="td-empty">Sin nombre</span>}
+                    {c.archivado && <span className="badge-archivado">Archivado</span>}
+                  </td>
                   <td><code className="td-usuario">{c.usuario}</code></td>
                   <td className="td-tutor">{c.tutor || <span className="td-empty">—</span>}</td>
-                  <td className="td-count">
-                    <span className="count-pill">{c.materias.length}</span>
-                  </td>
-                  <td>
-                    <span className={`resumen-badge ${resumen.clase}`}>{resumen.label}</span>
-                  </td>
+                  <td><span className="count-pill">{c.materias.length}</span></td>
+                  <td><span className={`resumen-badge ${resumen.clase}`}>{resumen.label}</span></td>
                   <td className="td-actions" onClick={e => e.stopPropagation()}>
-                    <button className="action-btn action-btn--edit" onClick={() => onEditar(c)} title="Editar">
-                      ✏ Editar
-                    </button>
-                    <button className="action-btn action-btn--del" onClick={() => onEliminar(c.id)} title="Eliminar">
-                      ✕
-                    </button>
+                    <button className="action-btn action-btn--edit" onClick={() => onEditar(c)}>✏ Editar</button>
+                    {listo && !c.archivado && (
+                      <button className="action-btn action-btn--archive" onClick={() => onArchivar(c.id)} title="Archivar estudiante">
+                        📁
+                      </button>
+                    )}
+                    {c.archivado && (
+                      <button className="action-btn action-btn--unarchive" onClick={() => onDesarchivar(c.id)} title="Desarchivar">
+                        ↩
+                      </button>
+                    )}
+                    <button className="action-btn action-btn--del" onClick={() => onEliminar(c.id)} title="Eliminar">✕</button>
                   </td>
                 </tr>
 
@@ -113,7 +147,10 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                       <td className="td-num td-num--sub" />
                       <td className="td-arrow td-arrow--sub">↳</td>
                       <td colSpan={2} className="td-materia">{m.nombre}</td>
-                      <td className="td-fecha">{formatFecha(m.fechaCierre)}</td>
+                      <td className="td-fecha">
+                        <div>{formatFecha(m.fechaCierre)}</div>
+                        <Countdown fechaCierre={m.fechaCierre} estado={m.estado} />
+                      </td>
                       <td colSpan={2}>
                         <span className={`status-badge ${cfg.clase}`}>{cfg.label}</span>
                       </td>
@@ -121,7 +158,6 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                         <button
                           className={`action-btn action-btn--estado action-btn--${est === 'calificado' ? 'reset' : 'avanzar'}`}
                           onClick={() => onAvanzarMateria(c.id, m.id)}
-                          title={cfg.siguiente}
                         >
                           {cfg.siguiente}
                         </button>

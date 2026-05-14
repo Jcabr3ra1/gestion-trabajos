@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { Cliente } from '../types'
-import { getClientes, eliminarCliente, avanzarEstadoMateria } from '../utils/storage'
+import { getClientes, eliminarCliente, avanzarEstadoMateria, archivarCliente, desarchivarCliente } from '../utils/storage'
 import ClienteTabla from '../components/ClienteTabla'
 
 interface Props {
@@ -8,26 +8,29 @@ interface Props {
   onEditar: (cliente: Cliente) => void
 }
 
-type Filtro = 'todos' | 'vencidos' | 'cargados' | 'calificados' | 'pendientes'
+type Filtro = 'activos' | 'vencidos' | 'cargados' | 'calificados' | 'archivados'
 
-const HOY = new Date().toISOString().split('T')[0]
+const HOY = new Date()
+HOY.setHours(0, 0, 0, 0)
 
 export default function Dashboard({ onAgregar, onEditar }: Props) {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [busqueda, setBusqueda] = useState('')
-  const [filtro, setFiltro] = useState<Filtro>('todos')
+  const [filtro, setFiltro] = useState<Filtro>('activos')
 
   const reload = () => setClientes(getClientes())
   useEffect(() => { reload() }, [])
 
-  const todasMaterias = clientes.flatMap(c => c.materias)
+  const activos = clientes.filter(c => !c.archivado)
+  const todasMaterias = activos.flatMap(c => c.materias)
+
   const stats = {
-    estudiantes: clientes.length,
-    materias:    todasMaterias.length,
-    pendientes:  todasMaterias.filter(m => m.estado === 'pendiente' && m.fechaCierre >= HOY).length,
+    estudiantes: activos.length,
+    pendientes:  todasMaterias.filter(m => m.estado === 'pendiente' && new Date(m.fechaCierre + 'T00:00:00') >= HOY).length,
     cargadas:    todasMaterias.filter(m => m.estado === 'cargado').length,
     calificadas: todasMaterias.filter(m => m.estado === 'calificado').length,
-    vencidas:    todasMaterias.filter(m => m.estado === 'pendiente' && m.fechaCierre < HOY).length,
+    vencidas:    todasMaterias.filter(m => m.estado === 'pendiente' && new Date(m.fechaCierre + 'T00:00:00') < HOY).length,
+    archivados:  clientes.filter(c => c.archivado).length,
   }
 
   const filtrados = clientes.filter(c => {
@@ -37,21 +40,31 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
       c.usuario.toLowerCase().includes(txt) ||
       c.tutor.toLowerCase().includes(txt)
     if (!coincide) return false
-    if (filtro === 'vencidos')    return c.materias.some(m => m.estado === 'pendiente' && m.fechaCierre < HOY)
+
+    if (filtro === 'archivados') return c.archivado
+    if (c.archivado) return false  // los archivados solo se ven en su filtro
+
+    if (filtro === 'vencidos')    return c.materias.some(m => m.estado === 'pendiente' && new Date(m.fechaCierre + 'T00:00:00') < HOY)
     if (filtro === 'cargados')    return c.materias.some(m => m.estado === 'cargado')
     if (filtro === 'calificados') return c.materias.length > 0 && c.materias.every(m => m.estado === 'calificado')
-    if (filtro === 'pendientes')  return c.materias.some(m => m.estado === 'pendiente' && m.fechaCierre >= HOY)
-    return true
+    return true // 'activos'
   })
 
   const handleAvanzar = (clienteId: string, materiaId: string) => {
     avanzarEstadoMateria(clienteId, materiaId)
     reload()
   }
-
   const handleEliminar = (id: string) => {
     if (!window.confirm('¿Eliminar este estudiante y todas sus materias?')) return
     eliminarCliente(id)
+    reload()
+  }
+  const handleArchivar = (id: string) => {
+    archivarCliente(id)
+    reload()
+  }
+  const handleDesarchivar = (id: string) => {
+    desarchivarCliente(id)
     reload()
   }
 
@@ -64,13 +77,6 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
           <div className="stat-info">
             <span className="stat-num">{stats.estudiantes}</span>
             <span className="stat-lbl">Estudiantes</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon stat-icon--purple">📚</div>
-          <div className="stat-info">
-            <span className="stat-num">{stats.materias}</span>
-            <span className="stat-lbl">Materias totales</span>
           </div>
         </div>
         <div className="stat-card">
@@ -120,15 +126,15 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
         </div>
         <div className="filtros">
           {([
-            ['todos',       'Todos'],
-            ['vencidos',    '⚠ Vencidos'],
-            ['pendientes',  '○ Pendientes'],
-            ['cargados',    '⬆ Cargados'],
-            ['calificados', '✓ Calificados'],
+            ['activos',      'Activos'],
+            ['vencidos',     '⚠ Vencidos'],
+            ['cargados',     '⬆ Cargados'],
+            ['calificados',  '✓ Calificados'],
+            ['archivados',   `📁 Archivados${stats.archivados > 0 ? ` (${stats.archivados})` : ''}`],
           ] as [Filtro, string][]).map(([f, label]) => (
             <button
               key={f}
-              className={`filtro-btn ${filtro === f ? 'filtro-btn--active' : ''}`}
+              className={`filtro-btn ${filtro === f ? 'filtro-btn--active' : ''} ${f === 'archivados' ? 'filtro-btn--arch' : ''}`}
               onClick={() => setFiltro(f)}
             >
               {label}
@@ -141,8 +147,10 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
       <div className="tabla-container">
         {filtrados.length === 0 ? (
           <div className="empty-state">
-            {clientes.length === 0
+            {clientes.filter(c => !c.archivado).length === 0
               ? <><div className="empty-icon">📋</div><p className="empty-title">Sin estudiantes</p><p className="empty-sub">Haz clic en <strong>＋ Nuevo estudiante</strong> para comenzar.</p></>
+              : filtro === 'archivados'
+              ? <><div className="empty-icon">📁</div><p className="empty-title">Sin archivados</p><p className="empty-sub">Los estudiantes con todas las materias calificadas aparecerán aquí al archivarlos.</p></>
               : <><div className="empty-icon">🔍</div><p className="empty-title">Sin resultados</p><p className="empty-sub">No se encontró "<strong>{busqueda}</strong>".</p></>
             }
           </div>
@@ -152,13 +160,15 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
             onAvanzarMateria={handleAvanzar}
             onEditar={onEditar}
             onEliminar={handleEliminar}
+            onArchivar={handleArchivar}
+            onDesarchivar={handleDesarchivar}
           />
         )}
       </div>
 
       {filtrados.length > 0 && (
         <div className="status-bar">
-          {filtrados.length} de {clientes.length} estudiante{clientes.length !== 1 ? 's' : ''}
+          {filtrados.length} de {activos.length} estudiante{activos.length !== 1 ? 's' : ''}
         </div>
       )}
     </div>

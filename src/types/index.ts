@@ -14,5 +14,6 @@ export interface Cliente {
   contrasena: string
   tutor: string
   materias: Materia[]
+  archivado: boolean
   creadoEn: string
 }

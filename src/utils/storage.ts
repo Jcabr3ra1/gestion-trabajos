@@ -18,10 +18,18 @@ function saveClientes(clientes: Cliente[]): void {
   localStorage.setItem(KEY, JSON.stringify(clientes))
 }
 
-export function agregarCliente(data: Omit<Cliente, 'id' | 'creadoEn'>): Cliente {
-  const nuevo: Cliente = { ...data, id: crypto.randomUUID(), creadoEn: new Date().toISOString() }
+export function agregarCliente(data: Omit<Cliente, 'id' | 'creadoEn' | 'archivado'>): Cliente {
+  const nuevo: Cliente = { ...data, archivado: false, id: crypto.randomUUID(), creadoEn: new Date().toISOString() }
   saveClientes([...getClientes(), nuevo])
   return nuevo
+}
+
+export function archivarCliente(id: string): void {
+  saveClientes(getClientes().map(c => c.id === id ? { ...c, archivado: true } : c))
+}
+
+export function desarchivarCliente(id: string): void {
+  saveClientes(getClientes().map(c => c.id === id ? { ...c, archivado: false } : c))
 }
 
 export function actualizarCliente(id: string, cambios: Partial<Omit<Cliente, 'id' | 'creadoEn'>>): void {
