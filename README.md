@@ -11,12 +11,14 @@ App web para gestionar trabajos académicos de estudiantes. Permite registrar es
 - Tabla expandible con estado general por estudiante
 - Buscador y filtros por estado
 - Estadísticas en tiempo real
-- Datos guardados en el navegador (localStorage)
+- Sincronización en tiempo real con Firebase Firestore
+- Archivo de estudiantes con materias completadas
 
 ## Tecnologías
 
 - React 18 + TypeScript
 - Vite
+- Firebase Firestore
 - CSS propio (sin librerías de UI)
 
 ## Ejecutar en local
