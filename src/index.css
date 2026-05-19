@@ -725,6 +725,7 @@ input, textarea, select { font: inherit; }
 .aviso-icon { font-size: 16px; }
 .aviso--vencido { background: var(--red-50); border-color: var(--red-100); color: var(--red-700); }
 .aviso--proxima { background: var(--amber-50); border-color: var(--amber-100); color: var(--amber-600); }
+.aviso--revisar { background: var(--purple-100); border-color: var(--purple-100); color: var(--purple-600); }
 .aviso-link {
   margin-left: 6px;
   background: transparent;
@@ -787,3 +788,15 @@ input, textarea, select { font: inherit; }
   color: var(--slate-500);
   margin-top: 3px;
 }
+
+/* ── Revisar badge (cargados) ─────────────────────────────── */
+.revisar {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.revisar--ok      { background: var(--blue-50);    color: var(--blue-600);   border: 1px solid var(--blue-100); }
+.revisar--alerta  { background: var(--purple-100); color: var(--purple-600); border: 1px solid var(--purple-100); }

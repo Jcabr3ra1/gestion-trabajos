@@ -57,6 +57,14 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
     return dias >= 0 && dias <= 5
   }).length
 
+  // cargadas hace 3+ días — recordar revisar si ya calificaron
+  const porRevisar = todasMaterias.filter(m => {
+    if (m.estado !== 'cargado') return false
+    if (!m.cargadoEn) return true  // si no hay timestamp (datos viejos), igual recordar
+    const dias = Math.round((Date.now() - new Date(m.cargadoEn).getTime()) / (1000 * 60 * 60 * 24))
+    return dias >= 3
+  }).length
+
   const stats = {
     estudiantes: activos.length,
     pendientes:  todasMaterias.filter(m => m.estado === 'pendiente' && new Date(m.fechaCierre + 'T00:00:00') >= HOY).length,
@@ -135,7 +143,7 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
 
   return (
     <div className="dashboard">
-      {(stats.vencidas > 0 || proximas > 0) && (
+      {(stats.vencidas > 0 || proximas > 0 || porRevisar > 0) && (
         <div className="avisos">
           {stats.vencidas > 0 && (
             <div className="aviso aviso--vencido">
@@ -148,6 +156,13 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
             <div className="aviso aviso--proxima">
               <span className="aviso-icon">⏰</span>
               <strong>{proximas}</strong>&nbsp;por vencer en los próximos 5 días
+            </div>
+          )}
+          {porRevisar > 0 && (
+            <div className="aviso aviso--revisar">
+              <span className="aviso-icon">👀</span>
+              <strong>{porRevisar}</strong>&nbsp;cargada{porRevisar !== 1 ? 's' : ''} hace 3+ días — revisar si ya calificaron
+              <button className="aviso-link" onClick={() => setFiltro('cargados')}>Ver</button>
             </div>
           )}
         </div>

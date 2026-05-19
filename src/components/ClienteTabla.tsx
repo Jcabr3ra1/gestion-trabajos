@@ -41,6 +41,15 @@ function Countdown({ fechaCierre, estado }: { fechaCierre: string; estado: Estad
   return <span className="countdown countdown--ok">{dias} días</span>
 }
 
+function RevisarBadge({ estado, cargadoEn }: { estado: EstadoTrabajo; cargadoEn?: string }) {
+  if (estado !== 'cargado') return null
+  if (!cargadoEn) return <span className="revisar revisar--alerta">👀 Revisar si calificaron</span>
+  const dias = Math.round((Date.now() - new Date(cargadoEn).getTime()) / (1000 * 60 * 60 * 24))
+  if (dias < 1) return <span className="revisar revisar--ok">Cargado hoy</span>
+  if (dias < 3) return <span className="revisar revisar--ok">Cargado hace {dias} día{dias !== 1 ? 's' : ''}</span>
+  return <span className="revisar revisar--alerta">👀 Hace {dias} días — revisar</span>
+}
+
 const ESTADO_CONFIG: Record<EstadoReal, { label: string; clase: string; siguiente: string }> = {
   pendiente:  { label: 'Pendiente',  clase: 'badge--pendiente',  siguiente: '→ Marcar cargado' },
   cargado:    { label: 'Cargado',    clase: 'badge--cargado',    siguiente: '→ Marcar calificado' },
@@ -144,6 +153,7 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                       <td className="td-fecha">
                         <div>{formatFecha(m.fechaCierre)}</div>
                         <Countdown fechaCierre={m.fechaCierre} estado={m.estado} />
+                        <RevisarBadge estado={m.estado} cargadoEn={m.cargadoEn} />
                       </td>
                       <td>
                         <span className={`status-badge ${cfg.clase}`}>{cfg.label}</span>

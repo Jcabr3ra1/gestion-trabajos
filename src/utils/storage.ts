@@ -48,10 +48,17 @@ export async function eliminarCliente(id: string): Promise<void> {
 }
 
 export async function avanzarEstadoMateria(clienteId: string, materiaId: string, materias: Materia[]): Promise<void> {
-  const actualizadas = materias.map(m =>
-    m.id === materiaId ? { ...m, estado: CICLO[m.estado] } : m
-  )
-  await updateDoc(doc(db, COL, clienteId), { materias: actualizadas, actualizadoEn: ahora() })
+  const ts = ahora()
+  const actualizadas = materias.map(m => {
+    if (m.id !== materiaId) return m
+    const nuevoEstado = CICLO[m.estado]
+    return {
+      ...m,
+      estado: nuevoEstado,
+      cargadoEn: nuevoEstado === 'cargado' ? ts : '',
+    }
+  })
+  await updateDoc(doc(db, COL, clienteId), { materias: actualizadas, actualizadoEn: ts })
 }
 
 export async function marcarReciente(id: string): Promise<void> {

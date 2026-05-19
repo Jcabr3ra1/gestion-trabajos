@@ -6,6 +6,7 @@ export interface Materia {
   fechaCierre: string
   estado: EstadoTrabajo
   tutor?: string
+  cargadoEn?: string
 }
 
 export interface Cliente {
