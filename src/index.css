@@ -250,6 +250,19 @@ input, textarea, select { font: inherit; }
   100% { background-color: transparent; }
 }
 
+/* Celdas de número con backgrounds hardcoded */
+.dark .td-num { background: rgba(255,255,255,0.02); color: var(--slate-500); border-right-color: var(--slate-200); }
+.dark .td-num--sub { background: transparent; }
+
+/* Botón archivar (tenía verde hardcoded) */
+.dark .action-btn--archive { background: rgba(34,197,94,0.15); color: #86efac; border-color: rgba(34,197,94,0.3); }
+.dark .action-btn--archive:hover { background: rgba(34,197,94,0.25); }
+.dark .action-btn--unarchive { background: rgba(148,163,184,0.15); color: var(--slate-700); border-color: var(--slate-200); }
+.dark .action-btn--unarchive:hover { background: rgba(148,163,184,0.25); }
+
+/* Borde superior del card de stats (tenía verde claro) */
+.dark .td-materia { color: var(--slate-700); }
+
 /* ── App shell ─────────────────────────────────────────────── */
 .app { min-height: 100vh; display: flex; flex-direction: column; }
 
