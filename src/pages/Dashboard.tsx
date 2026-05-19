@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { Cliente } from '../types'
 import {
   suscribirClientes, eliminarCliente,
   avanzarEstadoMateria, archivarCliente, desarchivarCliente,
+  actualizarContrasenasPorUsuario,
 } from '../utils/storage'
+import { exportarCredenciales, parsearExcelCredenciales } from '../utils/excel'
 import ClienteTabla from '../components/ClienteTabla'
 
 interface Props {
@@ -21,6 +23,8 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
   const [cargando, setCargando] = useState(true)
   const [busqueda, setBusqueda] = useState('')
   const [filtro, setFiltro] = useState<Filtro>('activos')
+  const [importando, setImportando] = useState(false)
+  const inputArchivoRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const unsub = suscribirClientes(data => {
@@ -70,6 +74,35 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
 
   const handleArchivar   = async (id: string) => { await archivarCliente(id) }
   const handleDesarchivar = async (id: string) => { await desarchivarCliente(id) }
+
+  const handleExportar = () => {
+    const activos = clientes.filter(c => !c.archivado)
+    exportarCredenciales(activos)
+  }
+
+  const handleImportar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const archivo = e.target.files?.[0]
+    if (!archivo) return
+    e.target.value = ''
+    setImportando(true)
+    try {
+      const pares = await parsearExcelCredenciales(archivo)
+      if (pares.length === 0) {
+        alert('No se encontraron filas válidas en el archivo.\nVerificá que tenga columnas "Usuario" y "Contraseña".')
+        return
+      }
+      const { actualizados, noEncontrados } = await actualizarContrasenasPorUsuario(pares)
+      let msg = `${actualizados} contraseña${actualizados !== 1 ? 's' : ''} actualizada${actualizados !== 1 ? 's' : ''}.`
+      if (noEncontrados.length > 0) {
+        msg += `\n\nNo encontrados (${noEncontrados.length}): ${noEncontrados.join(', ')}`
+      }
+      alert(msg)
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setImportando(false)
+    }
+  }
 
   if (cargando) {
     return (
@@ -123,6 +156,24 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
       <div className="toolbar">
         <div className="toolbar-left">
           <button className="btn-nuevo" onClick={onAgregar}>＋ Nuevo estudiante</button>
+          <button className="btn-xl btn-xl--export" onClick={handleExportar} title="Exportar usuario y contraseña a Excel">
+            ↓ Exportar Excel
+          </button>
+          <button
+            className="btn-xl btn-xl--import"
+            onClick={() => inputArchivoRef.current?.click()}
+            disabled={importando}
+            title="Importar contraseñas desde Excel"
+          >
+            {importando ? 'Importando…' : '↑ Importar Excel'}
+          </button>
+          <input
+            ref={inputArchivoRef}
+            type="file"
+            accept=".xlsx,.xls"
+            style={{ display: 'none' }}
+            onChange={handleImportar}
+          />
           <div className="search-wrap">
             <span className="search-icon">🔍</span>
             <input

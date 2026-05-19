@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, orderBy,
+  onSnapshot, query, orderBy, getDocs,
 } from 'firebase/firestore'
 import { db } from './firebase'
 import type { Cliente, Materia, EstadoTrabajo } from '../types'
@@ -60,4 +60,31 @@ export async function desarchivarCliente(id: string): Promise<void> {
 
 export function nuevaMateria(nombre: string, fechaCierre: string): Materia {
   return { id: crypto.randomUUID(), nombre, fechaCierre, estado: 'pendiente' }
+}
+
+export interface ResultadoImport {
+  actualizados: number
+  noEncontrados: string[]
+}
+
+export async function actualizarContrasenasPorUsuario(
+  pares: { usuario: string; contrasena: string }[]
+): Promise<ResultadoImport> {
+  const snap = await getDocs(collection(db, COL))
+  const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Cliente))
+
+  let actualizados = 0
+  const noEncontrados: string[] = []
+
+  for (const { usuario, contrasena } of pares) {
+    const encontrado = docs.find(c => c.usuario === usuario)
+    if (encontrado) {
+      await updateDoc(doc(db, COL, encontrado.id), { contrasena })
+      actualizados++
+    } else {
+      noEncontrados.push(usuario)
+    }
+  }
+
+  return { actualizados, noEncontrados }
 }
