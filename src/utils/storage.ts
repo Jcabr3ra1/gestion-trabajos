@@ -77,7 +77,9 @@ export async function actualizarContrasenasPorUsuario(
   const noEncontrados: string[] = []
 
   for (const { usuario, contrasena } of pares) {
-    const encontrado = docs.find(c => c.usuario === usuario)
+    const encontrado = docs.find(c =>
+      String(c.usuario).trim().toLowerCase() === String(usuario).trim().toLowerCase()
+    )
     if (encontrado) {
       await updateDoc(doc(db, COL, encontrado.id), { contrasena })
       actualizados++

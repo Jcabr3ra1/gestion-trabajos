@@ -8,8 +8,9 @@ export interface FilaCredencial {
 
 export function exportarCredenciales(clientes: Cliente[]): void {
   const filas = clientes.map(c => ({
+    Nombre: c.nombre,
     Usuario: c.usuario,
-    Contraseña: c.contrasena,
+    Contrasena: c.contrasena,
   }))
 
   const hoja = XLSX.utils.json_to_sheet(filas)
@@ -42,16 +43,25 @@ export function parsearExcelCredenciales(archivo: File): Promise<FilaCredencial[
         const filas = XLSX.utils.sheet_to_json<unknown[]>(hoja, { header: 1 })
         if (filas.length < 2) { resolve([]); return }
 
-        const headers = (filas[0] as unknown[]).map(h => String(h ?? ''))
-
-        // encontrar índices por nombre de columna, si no se encuentran usar 0 y 1
-        let idxUsuario    = headers.findIndex(esColumnaUsuario)
-        let idxContrasena = headers.findIndex(esColumnaContrasena)
-        if (idxUsuario    === -1) idxUsuario    = 0
-        if (idxContrasena === -1) idxContrasena = 1
+        // buscar la fila de encabezados dentro de las primeras 5 filas
+        let filaEncabezado = -1
+        let idxUsuario = 0
+        let idxContrasena = 1
+        for (let r = 0; r < Math.min(5, filas.length); r++) {
+          const row = (filas[r] as unknown[]).map(h => String(h ?? ''))
+          const u = row.findIndex(esColumnaUsuario)
+          const c = row.findIndex(esColumnaContrasena)
+          if (u !== -1 && c !== -1) {
+            filaEncabezado = r
+            idxUsuario    = u
+            idxContrasena = c
+            break
+          }
+        }
+        const inicio = filaEncabezado + 1  // si no se encontró encabezado, empieza en fila 0
 
         const credenciales: FilaCredencial[] = []
-        for (let i = 1; i < filas.length; i++) {
+        for (let i = inicio; i < filas.length; i++) {
           const fila      = filas[i] as unknown[]
           const usuario   = String(fila[idxUsuario]    ?? '').trim()
           const contrasena = String(fila[idxContrasena] ?? '').trim()
