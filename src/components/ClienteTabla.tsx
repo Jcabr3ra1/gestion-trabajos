@@ -74,14 +74,6 @@ function formatFecha(iso: string) {
 export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onEliminar, onArchivar, onDesarchivar, onInteraccion, onCopiar, destinoId, onLlegada }: Props) {
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set())
   const [resaltado, setResaltado] = useState<string | null>(null)
-  const [visibles, setVisibles] = useState<Set<string>>(new Set())
-
-  const togglePass = (id: string) =>
-    setVisibles(prev => {
-      const s = new Set(prev)
-      s.has(id) ? s.delete(id) : s.add(id)
-      return s
-    })
 
   const toggle = (id: string) => {
     let abriendo = false
@@ -156,12 +148,7 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                     <button className="copy-btn" onClick={e => { e.stopPropagation(); onCopiar(c.usuario, 'Usuario') }} title="Copiar usuario">📋</button>
                   </td>
                   <td className="td-cred">
-                    <code className={`td-pass ${visibles.has(c.id) ? 'td-pass--visible' : ''}`}>
-                      {visibles.has(c.id) ? c.contrasena : '••••••••'}
-                    </code>
-                    <button className="copy-btn" onClick={e => { e.stopPropagation(); togglePass(c.id) }} title={visibles.has(c.id) ? 'Ocultar' : 'Mostrar'}>
-                      {visibles.has(c.id) ? '🙈' : '👁'}
-                    </button>
+                    <code className="td-pass">{c.contrasena}</code>
                     <button className="copy-btn" onClick={e => { e.stopPropagation(); onCopiar(c.contrasena, 'Contraseña') }} title="Copiar contraseña">📋</button>
                   </td>
                   <td><span className="count-pill">{c.materias.length}</span></td>
