@@ -1168,16 +1168,37 @@ input, textarea, select { font: inherit; }
   .filtros { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
   .filtro-btn { flex-shrink: 0; }
 
-  /* Tabla — ocultar columnas no esenciales */
+  /* Tabla — ocultar columnas no esenciales en filas principales */
   .tabla { font-size: 12px; }
   .tabla th, .tabla td { padding: 8px 6px; }
-  .tabla th:nth-child(1), .tabla td:nth-child(1) { display: none; } /* # */
-  .tabla th:nth-child(4), .tabla td:nth-child(4) { display: none; } /* Usuario */
-  .tabla th:nth-child(5), .tabla td:nth-child(5) { display: none; } /* Mat. count */
+  /* # column completamente oculto */
+  .tabla th:nth-child(1) { display: none; }
+  .tr-main > td:nth-child(1) { display: none; }
+  /* Usuario y Mat. solo en filas principales */
+  .tabla th:nth-child(4), .tabla th:nth-child(5) { display: none; }
+  .tr-main > td:nth-child(4), .tr-main > td:nth-child(5) { display: none; }
   .td-actions { flex-wrap: wrap; gap: 4px; }
   .action-btn { padding: 4px 8px; font-size: 11px; }
   .td-visto { font-size: 10px; }
   .urg-pill { font-size: 11px; padding: 3px 8px; }
+
+  /* Sub-filas: layout tipo "card" en grid para que la info quepa */
+  .tr-sub {
+    display: grid !important;
+    grid-template-columns: 1fr auto;
+    gap: 4px 10px;
+    padding: 10px 12px 10px 28px;
+    align-items: center;
+  }
+  .tr-sub > td { display: block; padding: 0; border: none; }
+  .tr-sub > .td-num--sub { display: none; }
+  .tr-sub > .td-arrow--sub { display: none; }
+  .tr-sub > .td-materia  { grid-column: 1; font-weight: 600; font-size: 13px; }
+  .tr-sub > .td-fecha    { grid-column: 1; font-size: 11px; }
+  .tr-sub > td[colspan]  { grid-column: 1; }
+  .tr-sub > .td-actions  { grid-column: 2; grid-row: 1 / span 4; align-self: center; flex-wrap: nowrap; }
+  .tr-sub .status-badge { font-size: 11px; }
+  .td-materia-tutor { font-size: 10px; margin-top: 2px; }
 
   /* Atención hoy */
   .atencion { padding: 14px; }
