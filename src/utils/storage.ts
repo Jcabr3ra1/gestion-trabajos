@@ -64,17 +64,17 @@ export function nuevaMateria(nombre: string, fechaCierre: string): Materia {
 
 export interface ResultadoImport {
   actualizados: number
-  noEncontrados: string[]
+  creados: number
 }
 
-export async function actualizarContrasenasPorUsuario(
+export async function importarCredenciales(
   pares: { usuario: string; contrasena: string }[]
 ): Promise<ResultadoImport> {
   const snap = await getDocs(collection(db, COL))
   const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Cliente))
 
   let actualizados = 0
-  const noEncontrados: string[] = []
+  let creados = 0
 
   for (const { usuario, contrasena } of pares) {
     const encontrado = docs.find(c =>
@@ -84,9 +84,18 @@ export async function actualizarContrasenasPorUsuario(
       await updateDoc(doc(db, COL, encontrado.id), { contrasena })
       actualizados++
     } else {
-      noEncontrados.push(usuario)
+      await addDoc(collection(db, COL), {
+        nombre: usuario,
+        usuario,
+        contrasena,
+        tutor: '',
+        materias: [],
+        archivado: false,
+        creadoEn: new Date().toISOString(),
+      })
+      creados++
     }
   }
 
-  return { actualizados, noEncontrados }
+  return { actualizados, creados }
 }

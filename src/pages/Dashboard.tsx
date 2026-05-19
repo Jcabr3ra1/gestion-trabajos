@@ -3,7 +3,7 @@ import type { Cliente } from '../types'
 import {
   suscribirClientes, eliminarCliente,
   avanzarEstadoMateria, archivarCliente, desarchivarCliente,
-  actualizarContrasenasPorUsuario,
+  importarCredenciales,
 } from '../utils/storage'
 import { exportarCredenciales, parsearExcelCredenciales } from '../utils/excel'
 import ClienteTabla from '../components/ClienteTabla'
@@ -91,12 +91,11 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
         alert('No se encontraron filas válidas en el archivo.\nVerificá que tenga columnas "Usuario" y "Contraseña".')
         return
       }
-      const { actualizados, noEncontrados } = await actualizarContrasenasPorUsuario(pares)
-      let msg = `${actualizados} contraseña${actualizados !== 1 ? 's' : ''} actualizada${actualizados !== 1 ? 's' : ''}.`
-      if (noEncontrados.length > 0) {
-        msg += `\n\nNo encontrados (${noEncontrados.length}): ${noEncontrados.join(', ')}`
-      }
-      alert(msg)
+      const { actualizados, creados } = await importarCredenciales(pares)
+      const partes: string[] = []
+      if (creados > 0)      partes.push(`${creados} estudiante${creados !== 1 ? 's' : ''} creado${creados !== 1 ? 's' : ''}`)
+      if (actualizados > 0) partes.push(`${actualizados} contraseña${actualizados !== 1 ? 's' : ''} actualizada${actualizados !== 1 ? 's' : ''}`)
+      alert(partes.length > 0 ? partes.join('\n') : 'No se importó ninguna credencial.')
     } catch (err) {
       alert((err as Error).message)
     } finally {
