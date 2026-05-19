@@ -1174,9 +1174,9 @@ input, textarea, select { font: inherit; }
   /* # column completamente oculto */
   .tabla th:nth-child(1) { display: none; }
   .tr-main > td:nth-child(1) { display: none; }
-  /* Usuario y Mat. solo en filas principales */
-  .tabla th:nth-child(4), .tabla th:nth-child(5) { display: none; }
-  .tr-main > td:nth-child(4), .tr-main > td:nth-child(5) { display: none; }
+  /* Usuario, Contraseña y Mat. solo en filas principales */
+  .tabla th:nth-child(4), .tabla th:nth-child(5), .tabla th:nth-child(6) { display: none; }
+  .tr-main > td:nth-child(4), .tr-main > td:nth-child(5), .tr-main > td:nth-child(6) { display: none; }
   .td-actions { flex-wrap: wrap; gap: 4px; }
   .action-btn { padding: 4px 8px; font-size: 11px; }
   .td-visto { font-size: 10px; }
@@ -1230,4 +1230,93 @@ input, textarea, select { font: inherit; }
   .stat-cards { grid-template-columns: 1fr 1fr !important; }
   .atencion-est { font-size: 12px; }
   .atencion-mat { font-size: 11px; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COPY BUTTONS / CONTRASEÑA
+═══════════════════════════════════════════════════════════ */
+.td-cred {
+  white-space: nowrap;
+}
+.td-cred code {
+  margin-right: 4px;
+}
+.td-pass {
+  font-family: 'SF Mono', Consolas, monospace;
+  font-size: 12px;
+  color: var(--slate-600);
+  background: var(--slate-100);
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.td-pass--visible {
+  color: var(--slate-800);
+  letter-spacing: 0;
+  background: var(--amber-50);
+}
+.dark .td-pass { background: rgba(148,163,184,0.12); color: var(--slate-600); }
+.dark .td-pass--visible { background: rgba(245,158,11,0.18); color: var(--slate-800); }
+
+.copy-btn {
+  background: transparent;
+  border: none;
+  padding: 2px 5px;
+  margin: 0 2px;
+  font-size: 13px;
+  border-radius: 5px;
+  transition: background 0.12s;
+  vertical-align: middle;
+  line-height: 1;
+}
+.copy-btn:hover { background: var(--slate-200); }
+.dark .copy-btn:hover { background: rgba(255,255,255,0.08); }
+
+/* ═══════════════════════════════════════════════════════════
+   MATERIA CARDS EN EL FORMULARIO
+═══════════════════════════════════════════════════════════ */
+.materias-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.materias-header .form-section-title { margin: 0; }
+
+.materia-card {
+  display: grid;
+  grid-template-columns: 1fr 160px 1fr auto;
+  gap: 10px 12px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid var(--slate-200);
+  border-radius: 10px;
+  margin-top: 10px;
+  background: var(--slate-50);
+}
+.dark .materia-card { background: rgba(255,255,255,0.02); }
+.materia-card .field { min-width: 0; }
+.materia-card .btn-quitar {
+  background: var(--red-50);
+  color: var(--red-700);
+  border: 1px solid var(--red-100);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  align-self: end;
+  height: 36px;
+}
+.materia-card .btn-quitar:hover { background: var(--red-100); }
+.dark .materia-card .btn-quitar { background: rgba(220,38,38,0.18); color: #fca5a5; border-color: rgba(220,38,38,0.3); }
+.dark .materia-card .btn-quitar:hover { background: rgba(220,38,38,0.28); }
+
+@media (max-width: 720px) {
+  .materia-card {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .materia-card .btn-quitar { width: 100%; }
+  .materias-header { flex-direction: column; align-items: stretch; }
 }

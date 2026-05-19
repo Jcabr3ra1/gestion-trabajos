@@ -101,6 +101,15 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
   const handleDesarchivar = async (id: string) => { await desarchivarCliente(id) }
   const handleInteraccion = (id: string) => { void marcarReciente(id) }
 
+  const handleCopiar = async (texto: string, etiqueta: string) => {
+    try {
+      await navigator.clipboard.writeText(texto)
+      mostrarToast('ok', `${etiqueta} copiado`)
+    } catch {
+      mostrarToast('err', 'No se pudo copiar al portapapeles')
+    }
+  }
+
   const handleExportar = () => {
     const activos = clientes.filter(c => !c.archivado)
     exportarCredenciales(activos)
@@ -335,6 +344,7 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
             onArchivar={handleArchivar}
             onDesarchivar={handleDesarchivar}
             onInteraccion={handleInteraccion}
+            onCopiar={handleCopiar}
             destinoId={destinoId}
             onLlegada={() => setDestinoId(null)}
           />

@@ -77,6 +77,23 @@ export function nuevaMateria(nombre: string, fechaCierre: string, tutor: string 
   return { id: crypto.randomUUID(), nombre, fechaCierre, estado: 'pendiente', tutor }
 }
 
+export async function getMateriasSugeridas(limite = 20): Promise<string[]> {
+  const snap = await getDocs(collection(db, COL))
+  const counts = new Map<string, number>()
+  for (const d of snap.docs) {
+    const c = d.data() as Cliente
+    for (const m of c.materias ?? []) {
+      const nombre = m.nombre?.trim()
+      if (!nombre) continue
+      counts.set(nombre, (counts.get(nombre) ?? 0) + 1)
+    }
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limite)
+    .map(([nombre]) => nombre)
+}
+
 export interface ResultadoImport {
   actualizados: number
   creados: number

@@ -10,6 +10,7 @@ interface Props {
   onArchivar: (id: string) => void
   onDesarchivar: (id: string) => void
   onInteraccion: (id: string) => void
+  onCopiar: (texto: string, etiqueta: string) => void
   destinoId?: string | null
   onLlegada?: () => void
 }
@@ -70,9 +71,17 @@ function formatFecha(iso: string) {
   })
 }
 
-export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onEliminar, onArchivar, onDesarchivar, onInteraccion, destinoId, onLlegada }: Props) {
+export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onEliminar, onArchivar, onDesarchivar, onInteraccion, onCopiar, destinoId, onLlegada }: Props) {
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set())
   const [resaltado, setResaltado] = useState<string | null>(null)
+  const [visibles, setVisibles] = useState<Set<string>>(new Set())
+
+  const togglePass = (id: string) =>
+    setVisibles(prev => {
+      const s = new Set(prev)
+      s.has(id) ? s.delete(id) : s.add(id)
+      return s
+    })
 
   const toggle = (id: string) => {
     let abriendo = false
@@ -115,6 +124,7 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
             <th style={{ width: 32 }} />
             <th>Estudiante</th>
             <th>Usuario</th>
+            <th>Contraseña</th>
             <th style={{ width: 60 }}>Mat.</th>
             <th>Urgencia</th>
             <th style={{ width: 220 }}>Acciones</th>
@@ -141,7 +151,19 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                     </div>
                     {visto && <div className="td-visto">{visto}</div>}
                   </td>
-                  <td><code className="td-usuario">{c.usuario}</code></td>
+                  <td className="td-cred">
+                    <code className="td-usuario">{c.usuario}</code>
+                    <button className="copy-btn" onClick={e => { e.stopPropagation(); onCopiar(c.usuario, 'Usuario') }} title="Copiar usuario">📋</button>
+                  </td>
+                  <td className="td-cred">
+                    <code className={`td-pass ${visibles.has(c.id) ? 'td-pass--visible' : ''}`}>
+                      {visibles.has(c.id) ? c.contrasena : '••••••••'}
+                    </code>
+                    <button className="copy-btn" onClick={e => { e.stopPropagation(); togglePass(c.id) }} title={visibles.has(c.id) ? 'Ocultar' : 'Mostrar'}>
+                      {visibles.has(c.id) ? '🙈' : '👁'}
+                    </button>
+                    <button className="copy-btn" onClick={e => { e.stopPropagation(); onCopiar(c.contrasena, 'Contraseña') }} title="Copiar contraseña">📋</button>
+                  </td>
                   <td><span className="count-pill">{c.materias.length}</span></td>
                   <td className="td-urgencia">
                     <span className={`urg-pill urg-pill--${urg.nivel}`}>
@@ -176,7 +198,7 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
 
                 {abierto && c.materias.length === 0 && (
                   <tr className="tr-sub">
-                    <td colSpan={7} className="td-empty-sub">
+                    <td colSpan={8} className="td-empty-sub">
                       Sin materias — usa <strong>✏ Editar</strong> para agregar materias y tutores
                     </td>
                   </tr>
@@ -198,7 +220,7 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                         <Countdown fechaCierre={m.fechaCierre} estado={m.estado} />
                         <RevisarBadge estado={m.estado} cargadoEn={m.cargadoEn} />
                       </td>
-                      <td colSpan={2}>
+                      <td colSpan={3}>
                         <span className={`status-badge ${cfg.clase}`}>{cfg.label}</span>
                       </td>
                       <td className="td-actions">

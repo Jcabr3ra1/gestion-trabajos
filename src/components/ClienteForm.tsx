@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import type { Cliente, Materia } from '../types'
-import { agregarCliente, actualizarCliente, nuevaMateria } from '../utils/storage'
+import { useState, useEffect } from 'react'
+import type { Cliente, Materia, EstadoTrabajo } from '../types'
+import { agregarCliente, actualizarCliente, getMateriasSugeridas } from '../utils/storage'
 
 interface Props {
   clienteEditar?: Cliente | null
@@ -8,63 +8,34 @@ interface Props {
   onCancelar: () => void
 }
 
-const MATERIAS_FIJAS = [
-  'Lectura Crítica',
-  'Razonamiento Cuantitativo Saber Pro',
-  'Competencias Ciudadanas',
-] as const
-
-type MateriaFija = typeof MATERIAS_FIJAS[number]
-
-interface MateriaFijaForm {
-  activa: boolean
-  fechaCierre: string
-  tutor: string
-  id: string
-}
-
-interface OtraForm {
+interface MateriaForm {
   id: string
   nombre: string
   fechaCierre: string
   tutor: string
+  estado: EstadoTrabajo
+  cargadoEn?: string
 }
 
 interface FormData {
   nombre: string
   usuario: string
   contrasena: string
-  fijas: Record<MateriaFija, MateriaFijaForm>
-  otras: OtraForm[]
+  materias: MateriaForm[]
 }
 
-function iniciarFijas(materias: Materia[]): Record<MateriaFija, MateriaFijaForm> {
-  const resultado = {} as Record<MateriaFija, MateriaFijaForm>
-  for (const nombre of MATERIAS_FIJAS) {
-    const existente = materias.find(m => m.nombre === nombre)
-    resultado[nombre] = {
-      activa: !!existente,
-      fechaCierre: existente?.fechaCierre ?? '',
-      tutor: existente?.tutor ?? '',
-      id: existente?.id ?? crypto.randomUUID(),
-    }
-  }
-  return resultado
+function materiasIniciales(materias: Materia[]): MateriaForm[] {
+  return materias.map(m => ({
+    id: m.id,
+    nombre: m.nombre,
+    fechaCierre: m.fechaCierre,
+    tutor: m.tutor ?? '',
+    estado: m.estado,
+    cargadoEn: m.cargadoEn,
+  }))
 }
 
-function iniciarOtras(materias: Materia[]): OtraForm[] {
-  return materias
-    .filter(m => !(MATERIAS_FIJAS as readonly string[]).includes(m.nombre))
-    .map(m => ({ id: m.id, nombre: m.nombre, fechaCierre: m.fechaCierre, tutor: m.tutor ?? '' }))
-}
-
-function fijasVacias(): Record<MateriaFija, MateriaFijaForm> {
-  const r = {} as Record<MateriaFija, MateriaFijaForm>
-  for (const n of MATERIAS_FIJAS) r[n] = { activa: false, fechaCierre: '', tutor: '', id: crypto.randomUUID() }
-  return r
-}
-
-const VACIO: FormData = { nombre: '', usuario: '', contrasena: '', fijas: fijasVacias(), otras: [] }
+const VACIO: FormData = { nombre: '', usuario: '', contrasena: '', materias: [] }
 
 export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: Props) {
   const editando = !!clienteEditar
@@ -74,83 +45,65 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
           nombre: clienteEditar!.nombre,
           usuario: clienteEditar!.usuario,
           contrasena: clienteEditar!.contrasena,
-          fijas: iniciarFijas(clienteEditar!.materias),
-          otras: iniciarOtras(clienteEditar!.materias),
+          materias: materiasIniciales(clienteEditar!.materias),
         }
       : VACIO
   )
   const [errores, setErrores] = useState<Record<string, string>>({})
   const [verClave, setVerClave] = useState(false)
+  const [sugerencias, setSugerencias] = useState<string[]>([])
 
-  const setField = (campo: keyof Omit<FormData, 'fijas' | 'otras'>, valor: string) => {
+  useEffect(() => {
+    if (editando) {
+      getMateriasSugeridas().then(setSugerencias).catch(() => setSugerencias([]))
+    }
+  }, [editando])
+
+  const setField = (campo: 'nombre' | 'usuario' | 'contrasena', valor: string) => {
     setForm(prev => ({ ...prev, [campo]: valor }))
     setErrores(prev => ({ ...prev, [campo]: '' }))
   }
 
-  const setFija = (nombre: MateriaFija, campo: 'activa' | 'fechaCierre' | 'tutor', valor: boolean | string) => {
+  const agregarMat = () =>
     setForm(prev => ({
       ...prev,
-      fijas: { ...prev.fijas, [nombre]: { ...prev.fijas[nombre], [campo]: valor } },
+      materias: [...prev.materias, { id: crypto.randomUUID(), nombre: '', fechaCierre: '', tutor: '', estado: 'pendiente' }],
     }))
-    setErrores(prev => ({ ...prev, [`fija_${nombre}`]: '' }))
-  }
 
-  const agregarOtra = () =>
-    setForm(prev => ({ ...prev, otras: [...prev.otras, { id: crypto.randomUUID(), nombre: '', fechaCierre: '', tutor: '' }] }))
-
-  const setOtra = (idx: number, campo: keyof OtraForm, valor: string) => {
+  const setMat = (idx: number, campo: 'nombre' | 'fechaCierre' | 'tutor', valor: string) => {
     setForm(prev => ({
       ...prev,
-      otras: prev.otras.map((o, i) => i === idx ? { ...o, [campo]: valor } : o),
+      materias: prev.materias.map((m, i) => (i === idx ? { ...m, [campo]: valor } : m)),
     }))
-    setErrores(prev => ({ ...prev, [`otra_${idx}_${campo}`]: '' }))
+    setErrores(prev => ({ ...prev, [`mat_${idx}_${campo}`]: '' }))
   }
 
-  const quitarOtra = (idx: number) =>
-    setForm(prev => ({ ...prev, otras: prev.otras.filter((_, i) => i !== idx) }))
+  const quitarMat = (idx: number) =>
+    setForm(prev => ({ ...prev, materias: prev.materias.filter((_, i) => i !== idx) }))
 
   const validar = (): boolean => {
     const e: Record<string, string> = {}
     if (!form.usuario.trim()) e.usuario = 'Requerido'
     if (!form.contrasena.trim()) e.contrasena = 'Requerido'
     if (editando) {
-      for (const nombre of MATERIAS_FIJAS) {
-        if (form.fijas[nombre].activa && !form.fijas[nombre].fechaCierre)
-          e[`fija_${nombre}`] = 'Ingresa la fecha de cierre'
-      }
-      form.otras.forEach((o, i) => {
-        if (!o.nombre.trim()) e[`otra_${i}_nombre`] = 'Requerido'
-        if (!o.fechaCierre) e[`otra_${i}_fechaCierre`] = 'Requerido'
+      form.materias.forEach((m, i) => {
+        if (!m.nombre.trim()) e[`mat_${i}_nombre`] = 'Requerido'
+        if (!m.fechaCierre)   e[`mat_${i}_fechaCierre`] = 'Requerido'
       })
     }
     setErrores(e)
     return Object.keys(e).length === 0
   }
 
-  const construirMaterias = (): Materia[] => {
-    const fijasActivas = MATERIAS_FIJAS
-      .filter(n => form.fijas[n].activa)
-      .map(n => {
-        const f = form.fijas[n]
-        if (editando) {
-          const existente = clienteEditar!.materias.find(m => m.id === f.id)
-          return existente
-            ? { ...existente, fechaCierre: f.fechaCierre, tutor: f.tutor }
-            : nuevaMateria(n, f.fechaCierre, f.tutor)
-        }
-        return nuevaMateria(n, f.fechaCierre, f.tutor)
-      })
-    const otrasConvertidas = form.otras.map(o => {
-      if (editando) {
-        const existente = clienteEditar!.materias.find(m => m.id === o.id)
-        return existente
-          ? { ...existente, nombre: o.nombre, fechaCierre: o.fechaCierre, tutor: o.tutor }
-          : nuevaMateria(o.nombre, o.fechaCierre, o.tutor)
-      }
-      return nuevaMateria(o.nombre, o.fechaCierre, o.tutor)
-    })
-    return [...fijasActivas, ...otrasConvertidas]
-  }
+  const construirMaterias = (): Materia[] =>
+    form.materias.map(m => ({
+      id: m.id,
+      nombre: m.nombre.trim(),
+      fechaCierre: m.fechaCierre,
+      estado: m.estado,
+      tutor: m.tutor.trim(),
+      cargadoEn: m.cargadoEn ?? '',
+    }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -183,7 +136,6 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
 
         <form onSubmit={handleSubmit} noValidate>
 
-          {/* ── Acceso ── */}
           <div className="form-section">
             <h3 className="form-section-title">Datos de acceso</h3>
             <div className="form-grid">
@@ -213,82 +165,53 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
             </div>
           </div>
 
-          {/* ── Secciones solo al editar ── */}
           {editando && (
-            <>
-              <div className="form-section">
+            <div className="form-section">
+              <div className="materias-header">
                 <h3 className="form-section-title">Materias</h3>
-                <p className="form-section-hint">Activa las materias que aplican. Cada materia puede tener su propio tutor y fecha de cierre.</p>
-
-                <div className="materias-fijas">
-                  {MATERIAS_FIJAS.map(nombre => {
-                    const f = form.fijas[nombre]
-                    return (
-                      <div key={nombre} className={`materia-fija ${f.activa ? 'materia-fija--activa' : ''}`}>
-                        <label className="materia-check">
-                          <input
-                            type="checkbox"
-                            checked={f.activa}
-                            onChange={e => setFija(nombre, 'activa', e.target.checked)}
-                          />
-                          <span className="materia-nombre">{nombre}</span>
-                        </label>
-                        {f.activa && (
-                          <div className="materia-extra">
-                            <div className="materia-fecha">
-                              <label>Fecha de cierre</label>
-                              <input type="date" value={f.fechaCierre}
-                                onChange={e => setFija(nombre, 'fechaCierre', e.target.value)}
-                                className={errores[`fija_${nombre}`] ? 'field-input--err' : ''} />
-                              {errores[`fija_${nombre}`] && <span className="field-err">{errores[`fija_${nombre}`]}</span>}
-                            </div>
-                            <div className="materia-tutor">
-                              <label>Tutor <span className="field-opt">opcional</span></label>
-                              <input type="text" value={f.tutor}
-                                onChange={e => setFija(nombre, 'tutor', e.target.value)}
-                                placeholder="Ej: Prof. Ramírez" />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-
-                <div className="otras-header">
-                  <span className="otras-label">Otros</span>
-                  <button type="button" className="btn-agregar-otra" onClick={agregarOtra}>＋ Agregar otro</button>
-                </div>
-
-                {form.otras.length === 0 && (
-                  <p className="otras-empty">Sin trabajos adicionales. Usa el botón de arriba si hay algo extra.</p>
-                )}
-
-                {form.otras.map((o, i) => (
-                  <div key={o.id} className="otra-row">
-                    <div className="field">
-                      <label>Nombre del trabajo</label>
-                      <input type="text" value={o.nombre} onChange={e => setOtra(i, 'nombre', e.target.value)}
-                        className={errores[`otra_${i}_nombre`] ? 'field-input--err' : ''}
-                        placeholder="Ej: Trabajo de grado" />
-                      {errores[`otra_${i}_nombre`] && <span className="field-err">{errores[`otra_${i}_nombre`]}</span>}
-                    </div>
-                    <div className="field">
-                      <label>Fecha de cierre</label>
-                      <input type="date" value={o.fechaCierre} onChange={e => setOtra(i, 'fechaCierre', e.target.value)}
-                        className={errores[`otra_${i}_fechaCierre`] ? 'field-input--err' : ''} />
-                      {errores[`otra_${i}_fechaCierre`] && <span className="field-err">{errores[`otra_${i}_fechaCierre`]}</span>}
-                    </div>
-                    <div className="field">
-                      <label>Tutor <span className="field-opt">opcional</span></label>
-                      <input type="text" value={o.tutor} onChange={e => setOtra(i, 'tutor', e.target.value)}
-                        placeholder="Ej: Prof. Ramírez" />
-                    </div>
-                    <button type="button" className="btn-quitar" onClick={() => quitarOtra(i)} title="Quitar">✕</button>
-                  </div>
-                ))}
+                <button type="button" className="btn-agregar-otra" onClick={agregarMat}>＋ Agregar materia</button>
               </div>
-            </>
+              <p className="form-section-hint">
+                Escribí el nombre de la materia. {sugerencias.length > 0 && 'Las más usadas aparecen como sugerencia al escribir.'}
+              </p>
+
+              <datalist id="materias-sugeridas">
+                {sugerencias.map(s => <option key={s} value={s} />)}
+              </datalist>
+
+              {form.materias.length === 0 && (
+                <p className="otras-empty">Sin materias. Usá el botón <strong>＋ Agregar materia</strong> arriba.</p>
+              )}
+
+              {form.materias.map((m, i) => (
+                <div key={m.id} className="materia-card">
+                  <div className="field">
+                    <label>Materia</label>
+                    <input
+                      type="text"
+                      value={m.nombre}
+                      onChange={e => setMat(i, 'nombre', e.target.value)}
+                      className={errores[`mat_${i}_nombre`] ? 'field-input--err' : ''}
+                      list="materias-sugeridas"
+                      placeholder="Ej: Lectura Crítica"
+                    />
+                    {errores[`mat_${i}_nombre`] && <span className="field-err">{errores[`mat_${i}_nombre`]}</span>}
+                  </div>
+                  <div className="field">
+                    <label>Fecha de cierre</label>
+                    <input type="date" value={m.fechaCierre} onChange={e => setMat(i, 'fechaCierre', e.target.value)}
+                      className={errores[`mat_${i}_fechaCierre`] ? 'field-input--err' : ''} />
+                    {errores[`mat_${i}_fechaCierre`] && <span className="field-err">{errores[`mat_${i}_fechaCierre`]}</span>}
+                  </div>
+                  <div className="field">
+                    <label>Tutor <span className="field-opt">opcional</span></label>
+                    <input type="text" value={m.tutor} onChange={e => setMat(i, 'tutor', e.target.value)}
+                      placeholder="Ej: Prof. Ramírez" />
+                  </div>
+                  <button type="button" className="btn-quitar" onClick={() => quitarMat(i)} title="Quitar materia">✕</button>
+                </div>
+              ))}
+            </div>
           )}
 
           <div className="form-footer">
