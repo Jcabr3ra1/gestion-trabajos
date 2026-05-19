@@ -14,11 +14,22 @@ export function exportarCredenciales(clientes: Cliente[]): void {
   }))
 
   const hoja = XLSX.utils.json_to_sheet(filas)
-  hoja['!cols'] = [{ wch: 24 }, { wch: 24 }]
+  hoja['!cols'] = [{ wch: 24 }, { wch: 24 }, { wch: 24 }]
 
   const libro = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(libro, hoja, 'Credenciales')
   XLSX.writeFile(libro, 'credenciales.xlsx')
+}
+
+export function descargarPlantilla(): void {
+  const hoja = XLSX.utils.aoa_to_sheet([
+    ['Usuario', 'Contrasena'],
+    ['1003932829', 'Ejemplo123'],
+  ])
+  hoja['!cols'] = [{ wch: 24 }, { wch: 24 }]
+  const libro = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(libro, hoja, 'Credenciales')
+  XLSX.writeFile(libro, 'plantilla-credenciales.xlsx')
 }
 
 function esColumnaUsuario(header: string): boolean {

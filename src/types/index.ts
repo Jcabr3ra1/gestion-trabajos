@@ -5,6 +5,7 @@ export interface Materia {
   nombre: string
   fechaCierre: string
   estado: EstadoTrabajo
+  tutor?: string
 }
 
 export interface Cliente {
@@ -16,4 +17,5 @@ export interface Cliente {
   materias: Materia[]
   archivado: boolean
   creadoEn: string
+  actualizadoEn?: string
 }

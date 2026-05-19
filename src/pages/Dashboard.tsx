@@ -5,7 +5,7 @@ import {
   avanzarEstadoMateria, archivarCliente, desarchivarCliente,
   importarCredenciales,
 } from '../utils/storage'
-import { exportarCredenciales, parsearExcelCredenciales } from '../utils/excel'
+import { exportarCredenciales, parsearExcelCredenciales, descargarPlantilla } from '../utils/excel'
 import ClienteTabla from '../components/ClienteTabla'
 
 interface Props {
@@ -24,7 +24,13 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
   const [busqueda, setBusqueda] = useState('')
   const [filtro, setFiltro] = useState<Filtro>('activos')
   const [importando, setImportando] = useState(false)
+  const [toast, setToast] = useState<{ tipo: 'ok' | 'err'; mensaje: string } | null>(null)
   const inputArchivoRef = useRef<HTMLInputElement>(null)
+
+  const mostrarToast = (tipo: 'ok' | 'err', mensaje: string) => {
+    setToast({ tipo, mensaje })
+    setTimeout(() => setToast(null), 4500)
+  }
 
   useEffect(() => {
     const unsub = suscribirClientes(data => {
@@ -34,8 +40,22 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
     return unsub
   }, [])
 
-  const activos = clientes.filter(c => !c.archivado)
+  // ordenar por interacción más reciente (recientes arriba)
+  const ordenados = [...clientes].sort((a, b) => {
+    const ta = a.actualizadoEn ?? a.creadoEn
+    const tb = b.actualizadoEn ?? b.creadoEn
+    return tb.localeCompare(ta)
+  })
+
+  const activos = ordenados.filter(c => !c.archivado)
   const todasMaterias = activos.flatMap(c => c.materias)
+
+  // próximas a vencer dentro de 5 días (incluyendo hoy)
+  const proximas = todasMaterias.filter(m => {
+    if (m.estado !== 'pendiente') return false
+    const dias = Math.round((new Date(m.fechaCierre + 'T00:00:00').getTime() - HOY.getTime()) / (1000 * 60 * 60 * 24))
+    return dias >= 0 && dias <= 5
+  }).length
 
   const stats = {
     estudiantes: activos.length,
@@ -43,15 +63,15 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
     cargadas:    todasMaterias.filter(m => m.estado === 'cargado').length,
     calificadas: todasMaterias.filter(m => m.estado === 'calificado').length,
     vencidas:    todasMaterias.filter(m => m.estado === 'pendiente' && new Date(m.fechaCierre + 'T00:00:00') < HOY).length,
-    archivados:  clientes.filter(c => c.archivado).length,
+    archivados:  ordenados.filter(c => c.archivado).length,
   }
 
-  const filtrados = clientes.filter(c => {
+  const filtrados = ordenados.filter(c => {
     const txt = busqueda.toLowerCase()
     const coincide =
       c.nombre.toLowerCase().includes(txt) ||
       c.usuario.toLowerCase().includes(txt) ||
-      c.tutor.toLowerCase().includes(txt)
+      c.materias.some(m => (m.tutor ?? '').toLowerCase().includes(txt))
     if (!coincide) return false
     if (filtro === 'archivados') return c.archivado
     if (c.archivado) return false
@@ -88,16 +108,16 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
     try {
       const pares = await parsearExcelCredenciales(archivo)
       if (pares.length === 0) {
-        alert('No se encontraron filas válidas en el archivo.\nVerificá que tenga columnas "Usuario" y "Contraseña".')
+        mostrarToast('err', 'No se encontraron filas válidas. Verificá las columnas "Usuario" y "Contraseña".')
         return
       }
       const { actualizados, creados } = await importarCredenciales(pares)
       const partes: string[] = []
-      if (creados > 0)      partes.push(`${creados} estudiante${creados !== 1 ? 's' : ''} creado${creados !== 1 ? 's' : ''}`)
-      if (actualizados > 0) partes.push(`${actualizados} contraseña${actualizados !== 1 ? 's' : ''} actualizada${actualizados !== 1 ? 's' : ''}`)
-      alert(partes.length > 0 ? partes.join('\n') : 'No se importó ninguna credencial.')
+      if (creados > 0)      partes.push(`${creados} creado${creados !== 1 ? 's' : ''}`)
+      if (actualizados > 0) partes.push(`${actualizados} actualizado${actualizados !== 1 ? 's' : ''}`)
+      mostrarToast('ok', partes.length > 0 ? `Importación lista: ${partes.join(', ')}.` : 'No se importó ninguna credencial.')
     } catch (err) {
-      alert((err as Error).message)
+      mostrarToast('err', (err as Error).message)
     } finally {
       setImportando(false)
     }
@@ -114,6 +134,24 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
 
   return (
     <div className="dashboard">
+      {(stats.vencidas > 0 || proximas > 0) && (
+        <div className="avisos">
+          {stats.vencidas > 0 && (
+            <div className="aviso aviso--vencido">
+              <span className="aviso-icon">🔴</span>
+              <strong>{stats.vencidas}</strong>&nbsp;materia{stats.vencidas !== 1 ? 's' : ''} vencida{stats.vencidas !== 1 ? 's' : ''}
+              <button className="aviso-link" onClick={() => setFiltro('vencidos')}>Ver</button>
+            </div>
+          )}
+          {proximas > 0 && (
+            <div className="aviso aviso--proxima">
+              <span className="aviso-icon">⏰</span>
+              <strong>{proximas}</strong>&nbsp;por vencer en los próximos 5 días
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="stat-cards">
         <div className="stat-card">
           <div className="stat-icon stat-icon--blue">👥</div>
@@ -166,6 +204,9 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
           >
             {importando ? 'Importando…' : '↑ Importar Excel'}
           </button>
+          <button className="btn-xl btn-xl--template" onClick={descargarPlantilla} title="Descargar plantilla Excel vacía">
+            ▤ Plantilla
+          </button>
           <input
             ref={inputArchivoRef}
             type="file"
@@ -178,7 +219,7 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
             <input
               className="search-input"
               type="search"
-              placeholder="Buscar por nombre, usuario o tutor..."
+              placeholder="Buscar por nombre, usuario o tutor de materia..."
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
             />
@@ -228,6 +269,14 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
       {filtrados.length > 0 && (
         <div className="status-bar">
           {filtrados.length} de {activos.length} estudiante{activos.length !== 1 ? 's' : ''}
+        </div>
+      )}
+
+      {toast && (
+        <div className={`toast toast--${toast.tipo}`}>
+          <span className="toast-icon">{toast.tipo === 'ok' ? '✓' : '⚠'}</span>
+          <span className="toast-msg">{toast.mensaje}</span>
+          <button className="toast-close" onClick={() => setToast(null)}>✕</button>
         </div>
       )}
     </div>

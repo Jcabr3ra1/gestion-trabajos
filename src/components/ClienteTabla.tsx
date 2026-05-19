@@ -47,19 +47,6 @@ const ESTADO_CONFIG: Record<EstadoReal, { label: string; clase: string; siguient
   vencido:    { label: 'Vencido',    clase: 'badge--vencido',    siguiente: '→ Marcar cargado' },
 }
 
-function resumenCliente(c: Cliente) {
-  if (c.materias.length === 0) return { label: 'Sin materias', clase: 'resumen--sin' }
-  const hoy = new Date(); hoy.setHours(0,0,0,0)
-  const vencidas    = c.materias.filter(m => m.estado === 'pendiente' && new Date(m.fechaCierre + 'T00:00:00') < hoy).length
-  const calificadas = c.materias.filter(m => m.estado === 'calificado').length
-  const cargadas    = c.materias.filter(m => m.estado === 'cargado').length
-  const total       = c.materias.length
-  if (vencidas > 0)          return { label: `${vencidas} vencida${vencidas > 1 ? 's' : ''}`, clase: 'resumen--vencido' }
-  if (calificadas === total) return { label: 'Todas calificadas', clase: 'resumen--calificado' }
-  if (cargadas > 0)          return { label: `${cargadas} cargada${cargadas > 1 ? 's' : ''}`, clase: 'resumen--cargado' }
-  return { label: 'Sin iniciar', clase: 'resumen--pendiente' }
-}
-
 function todasCalificadas(c: Cliente): boolean {
   return c.materias.length > 0 && c.materias.every(m => m.estado === 'calificado')
 }
@@ -89,16 +76,13 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
             <th style={{ width: 32 }} />
             <th>Estudiante</th>
             <th>Usuario</th>
-            <th>Tutor</th>
             <th>Materias</th>
-            <th>Estado</th>
             <th style={{ width: 180 }}>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {clientes.map((c, i) => {
             const abierto  = expandidos.has(c.id)
-            const resumen  = resumenCliente(c)
             const listo    = todasCalificadas(c)
 
             return (
@@ -112,9 +96,7 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                     {c.archivado && <span className="badge-archivado">Archivado</span>}
                   </td>
                   <td><code className="td-usuario">{c.usuario}</code></td>
-                  <td className="td-tutor">{c.tutor || <span className="td-empty">—</span>}</td>
                   <td><span className="count-pill">{c.materias.length}</span></td>
-                  <td><span className={`resumen-badge ${resumen.clase}`}>{resumen.label}</span></td>
                   <td className="td-actions" onClick={e => e.stopPropagation()}>
                     <button className="action-btn action-btn--edit" onClick={() => onEditar(c)}>✏ Editar</button>
                     {listo && !c.archivado && (
@@ -133,8 +115,8 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
 
                 {abierto && c.materias.length === 0 && (
                   <tr className="tr-sub">
-                    <td colSpan={8} className="td-empty-sub">
-                      Sin materias — usa <strong>✏ Editar</strong> para agregar tutor y materias
+                    <td colSpan={6} className="td-empty-sub">
+                      Sin materias — usa <strong>✏ Editar</strong> para agregar materias y tutores
                     </td>
                   </tr>
                 )}
@@ -146,12 +128,15 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                     <tr key={m.id} className="tr-sub">
                       <td className="td-num td-num--sub" />
                       <td className="td-arrow td-arrow--sub">↳</td>
-                      <td colSpan={2} className="td-materia">{m.nombre}</td>
+                      <td className="td-materia">
+                        {m.nombre}
+                        {m.tutor && <div className="td-materia-tutor">👤 {m.tutor}</div>}
+                      </td>
                       <td className="td-fecha">
                         <div>{formatFecha(m.fechaCierre)}</div>
                         <Countdown fechaCierre={m.fechaCierre} estado={m.estado} />
                       </td>
-                      <td colSpan={2}>
+                      <td>
                         <span className={`status-badge ${cfg.clase}`}>{cfg.label}</span>
                       </td>
                       <td className="td-actions">

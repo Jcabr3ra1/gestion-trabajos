@@ -19,6 +19,7 @@ type MateriaFija = typeof MATERIAS_FIJAS[number]
 interface MateriaFijaForm {
   activa: boolean
   fechaCierre: string
+  tutor: string
   id: string
 }
 
@@ -26,13 +27,13 @@ interface OtraForm {
   id: string
   nombre: string
   fechaCierre: string
+  tutor: string
 }
 
 interface FormData {
   nombre: string
   usuario: string
   contrasena: string
-  tutor: string
   fijas: Record<MateriaFija, MateriaFijaForm>
   otras: OtraForm[]
 }
@@ -44,6 +45,7 @@ function iniciarFijas(materias: Materia[]): Record<MateriaFija, MateriaFijaForm>
     resultado[nombre] = {
       activa: !!existente,
       fechaCierre: existente?.fechaCierre ?? '',
+      tutor: existente?.tutor ?? '',
       id: existente?.id ?? crypto.randomUUID(),
     }
   }
@@ -53,16 +55,16 @@ function iniciarFijas(materias: Materia[]): Record<MateriaFija, MateriaFijaForm>
 function iniciarOtras(materias: Materia[]): OtraForm[] {
   return materias
     .filter(m => !(MATERIAS_FIJAS as readonly string[]).includes(m.nombre))
-    .map(m => ({ id: m.id, nombre: m.nombre, fechaCierre: m.fechaCierre }))
+    .map(m => ({ id: m.id, nombre: m.nombre, fechaCierre: m.fechaCierre, tutor: m.tutor ?? '' }))
 }
 
 function fijasVacias(): Record<MateriaFija, MateriaFijaForm> {
   const r = {} as Record<MateriaFija, MateriaFijaForm>
-  for (const n of MATERIAS_FIJAS) r[n] = { activa: false, fechaCierre: '', id: crypto.randomUUID() }
+  for (const n of MATERIAS_FIJAS) r[n] = { activa: false, fechaCierre: '', tutor: '', id: crypto.randomUUID() }
   return r
 }
 
-const VACIO: FormData = { nombre: '', usuario: '', contrasena: '', tutor: '', fijas: fijasVacias(), otras: [] }
+const VACIO: FormData = { nombre: '', usuario: '', contrasena: '', fijas: fijasVacias(), otras: [] }
 
 export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: Props) {
   const editando = !!clienteEditar
@@ -72,7 +74,6 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
           nombre: clienteEditar!.nombre,
           usuario: clienteEditar!.usuario,
           contrasena: clienteEditar!.contrasena,
-          tutor: clienteEditar!.tutor,
           fijas: iniciarFijas(clienteEditar!.materias),
           otras: iniciarOtras(clienteEditar!.materias),
         }
@@ -86,7 +87,7 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
     setErrores(prev => ({ ...prev, [campo]: '' }))
   }
 
-  const setFija = (nombre: MateriaFija, campo: 'activa' | 'fechaCierre', valor: boolean | string) => {
+  const setFija = (nombre: MateriaFija, campo: 'activa' | 'fechaCierre' | 'tutor', valor: boolean | string) => {
     setForm(prev => ({
       ...prev,
       fijas: { ...prev.fijas, [nombre]: { ...prev.fijas[nombre], [campo]: valor } },
@@ -95,7 +96,7 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
   }
 
   const agregarOtra = () =>
-    setForm(prev => ({ ...prev, otras: [...prev.otras, { id: crypto.randomUUID(), nombre: '', fechaCierre: '' }] }))
+    setForm(prev => ({ ...prev, otras: [...prev.otras, { id: crypto.randomUUID(), nombre: '', fechaCierre: '', tutor: '' }] }))
 
   const setOtra = (idx: number, campo: keyof OtraForm, valor: string) => {
     setForm(prev => ({
@@ -134,19 +135,19 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
         if (editando) {
           const existente = clienteEditar!.materias.find(m => m.id === f.id)
           return existente
-            ? { ...existente, fechaCierre: f.fechaCierre }
-            : nuevaMateria(n, f.fechaCierre)
+            ? { ...existente, fechaCierre: f.fechaCierre, tutor: f.tutor }
+            : nuevaMateria(n, f.fechaCierre, f.tutor)
         }
-        return nuevaMateria(n, f.fechaCierre)
+        return nuevaMateria(n, f.fechaCierre, f.tutor)
       })
     const otrasConvertidas = form.otras.map(o => {
       if (editando) {
         const existente = clienteEditar!.materias.find(m => m.id === o.id)
         return existente
-          ? { ...existente, nombre: o.nombre, fechaCierre: o.fechaCierre }
-          : nuevaMateria(o.nombre, o.fechaCierre)
+          ? { ...existente, nombre: o.nombre, fechaCierre: o.fechaCierre, tutor: o.tutor }
+          : nuevaMateria(o.nombre, o.fechaCierre, o.tutor)
       }
-      return nuevaMateria(o.nombre, o.fechaCierre)
+      return nuevaMateria(o.nombre, o.fechaCierre, o.tutor)
     })
     return [...fijasActivas, ...otrasConvertidas]
   }
@@ -158,7 +159,7 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
       nombre: form.nombre,
       usuario: form.usuario,
       contrasena: form.contrasena,
-      tutor: form.tutor,
+      tutor: '',
       materias: editando ? construirMaterias() : [],
     }
     if (editando) {
@@ -216,18 +217,8 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
           {editando && (
             <>
               <div className="form-section">
-                <h3 className="form-section-title">Información académica</h3>
-                <div className="form-grid">
-                  <div className="field field--full">
-                    <label>Nombre del tutor <span className="field-opt">opcional</span></label>
-                    <input type="text" value={form.tutor} onChange={e => setField('tutor', e.target.value)} placeholder="Ej: Prof. Ramírez" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-section">
                 <h3 className="form-section-title">Materias</h3>
-                <p className="form-section-hint">Activa las materias que aplican y agrega la fecha de cierre del curso.</p>
+                <p className="form-section-hint">Activa las materias que aplican. Cada materia puede tener su propio tutor y fecha de cierre.</p>
 
                 <div className="materias-fijas">
                   {MATERIAS_FIJAS.map(nombre => {
@@ -243,12 +234,20 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
                           <span className="materia-nombre">{nombre}</span>
                         </label>
                         {f.activa && (
-                          <div className="materia-fecha">
-                            <label>Fecha de cierre</label>
-                            <input type="date" value={f.fechaCierre}
-                              onChange={e => setFija(nombre, 'fechaCierre', e.target.value)}
-                              className={errores[`fija_${nombre}`] ? 'field-input--err' : ''} />
-                            {errores[`fija_${nombre}`] && <span className="field-err">{errores[`fija_${nombre}`]}</span>}
+                          <div className="materia-extra">
+                            <div className="materia-fecha">
+                              <label>Fecha de cierre</label>
+                              <input type="date" value={f.fechaCierre}
+                                onChange={e => setFija(nombre, 'fechaCierre', e.target.value)}
+                                className={errores[`fija_${nombre}`] ? 'field-input--err' : ''} />
+                              {errores[`fija_${nombre}`] && <span className="field-err">{errores[`fija_${nombre}`]}</span>}
+                            </div>
+                            <div className="materia-tutor">
+                              <label>Tutor <span className="field-opt">opcional</span></label>
+                              <input type="text" value={f.tutor}
+                                onChange={e => setFija(nombre, 'tutor', e.target.value)}
+                                placeholder="Ej: Prof. Ramírez" />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -279,6 +278,11 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
                       <input type="date" value={o.fechaCierre} onChange={e => setOtra(i, 'fechaCierre', e.target.value)}
                         className={errores[`otra_${i}_fechaCierre`] ? 'field-input--err' : ''} />
                       {errores[`otra_${i}_fechaCierre`] && <span className="field-err">{errores[`otra_${i}_fechaCierre`]}</span>}
+                    </div>
+                    <div className="field">
+                      <label>Tutor <span className="field-opt">opcional</span></label>
+                      <input type="text" value={o.tutor} onChange={e => setOtra(i, 'tutor', e.target.value)}
+                        placeholder="Ej: Prof. Ramírez" />
                     </div>
                     <button type="button" className="btn-quitar" onClick={() => quitarOtra(i)} title="Quitar">✕</button>
                   </div>

@@ -1,6 +1,6 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, orderBy, getDocs,
+  onSnapshot, query, getDocs,
 } from 'firebase/firestore'
 import { db } from './firebase'
 import type { Cliente, Materia, EstadoTrabajo } from '../types'
@@ -13,8 +13,10 @@ const CICLO: Record<EstadoTrabajo, EstadoTrabajo> = {
   calificado: 'pendiente',
 }
 
+const ahora = () => new Date().toISOString()
+
 export function suscribirClientes(callback: (clientes: Cliente[]) => void) {
-  const q = query(collection(db, COL), orderBy('creadoEn', 'asc'))
+  const q = query(collection(db, COL))
   return onSnapshot(q,
     snapshot => {
       const clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Cliente))
@@ -28,15 +30,17 @@ export function suscribirClientes(callback: (clientes: Cliente[]) => void) {
 }
 
 export async function agregarCliente(data: Omit<Cliente, 'id' | 'creadoEn' | 'archivado'>): Promise<void> {
+  const ts = ahora()
   await addDoc(collection(db, COL), {
     ...data,
     archivado: false,
-    creadoEn: new Date().toISOString(),
+    creadoEn: ts,
+    actualizadoEn: ts,
   })
 }
 
 export async function actualizarCliente(id: string, cambios: Partial<Omit<Cliente, 'id' | 'creadoEn'>>): Promise<void> {
-  await updateDoc(doc(db, COL, id), { ...cambios })
+  await updateDoc(doc(db, COL, id), { ...cambios, actualizadoEn: ahora() })
 }
 
 export async function eliminarCliente(id: string): Promise<void> {
@@ -47,19 +51,19 @@ export async function avanzarEstadoMateria(clienteId: string, materiaId: string,
   const actualizadas = materias.map(m =>
     m.id === materiaId ? { ...m, estado: CICLO[m.estado] } : m
   )
-  await updateDoc(doc(db, COL, clienteId), { materias: actualizadas })
+  await updateDoc(doc(db, COL, clienteId), { materias: actualizadas, actualizadoEn: ahora() })
 }
 
 export async function archivarCliente(id: string): Promise<void> {
-  await updateDoc(doc(db, COL, id), { archivado: true })
+  await updateDoc(doc(db, COL, id), { archivado: true, actualizadoEn: ahora() })
 }
 
 export async function desarchivarCliente(id: string): Promise<void> {
-  await updateDoc(doc(db, COL, id), { archivado: false })
+  await updateDoc(doc(db, COL, id), { archivado: false, actualizadoEn: ahora() })
 }
 
-export function nuevaMateria(nombre: string, fechaCierre: string): Materia {
-  return { id: crypto.randomUUID(), nombre, fechaCierre, estado: 'pendiente' }
+export function nuevaMateria(nombre: string, fechaCierre: string, tutor: string = ''): Materia {
+  return { id: crypto.randomUUID(), nombre, fechaCierre, estado: 'pendiente', tutor }
 }
 
 export interface ResultadoImport {
@@ -80,8 +84,9 @@ export async function importarCredenciales(
     const encontrado = docs.find(c =>
       String(c.usuario).trim().toLowerCase() === String(usuario).trim().toLowerCase()
     )
+    const ts = ahora()
     if (encontrado) {
-      await updateDoc(doc(db, COL, encontrado.id), { contrasena })
+      await updateDoc(doc(db, COL, encontrado.id), { contrasena, actualizadoEn: ts })
       actualizados++
     } else {
       await addDoc(collection(db, COL), {
@@ -91,7 +96,8 @@ export async function importarCredenciales(
         tutor: '',
         materias: [],
         archivado: false,
-        creadoEn: new Date().toISOString(),
+        creadoEn: ts,
+        actualizadoEn: ts,
       })
       creados++
     }
