@@ -20,6 +20,20 @@ export function exportarCredenciales(clientes: Cliente[]): void {
   XLSX.writeFile(libro, 'credenciales.xlsx')
 }
 
+function normalizar(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+}
+
+function buscarClave(fila: Record<string, unknown>, prefijos: string[]): string {
+  for (const key of Object.keys(fila)) {
+    const norm = normalizar(key)
+    if (prefijos.some(p => norm.startsWith(p))) {
+      return String(fila[key] ?? '').trim()
+    }
+  }
+  return ''
+}
+
 export function parsearExcelCredenciales(archivo: File): Promise<FilaCredencial[]> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -32,9 +46,8 @@ export function parsearExcelCredenciales(archivo: File): Promise<FilaCredencial[
 
         const credenciales: FilaCredencial[] = []
         for (const fila of filas) {
-          // acepta columnas con cualquier capitalización
-          const usuario   = String(fila['usuario']   ?? fila['Usuario']   ?? '').trim()
-          const contrasena = String(fila['contrasena'] ?? fila['Contraseña'] ?? fila['contrasenia'] ?? fila['password'] ?? '').trim()
+          const usuario    = buscarClave(fila, ['usuario'])
+          const contrasena = buscarClave(fila, ['contrase', 'password', 'clave'])
           if (usuario && contrasena) {
             credenciales.push({ usuario, contrasena })
           }
