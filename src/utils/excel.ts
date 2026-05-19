@@ -20,18 +20,13 @@ export function exportarCredenciales(clientes: Cliente[]): void {
   XLSX.writeFile(libro, 'credenciales.xlsx')
 }
 
-function normalizar(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+function esColumnaUsuario(header: string): boolean {
+  return header.toLowerCase().includes('usuario')
 }
 
-function buscarClave(fila: Record<string, unknown>, prefijos: string[]): string {
-  for (const key of Object.keys(fila)) {
-    const norm = normalizar(key)
-    if (prefijos.some(p => norm.startsWith(p))) {
-      return String(fila[key] ?? '').trim()
-    }
-  }
-  return ''
+function esColumnaContrasena(header: string): boolean {
+  const h = header.toLowerCase()
+  return h.includes('contrase') || h.includes('password') || h.includes('clave')
 }
 
 export function parsearExcelCredenciales(archivo: File): Promise<FilaCredencial[]> {
@@ -39,15 +34,27 @@ export function parsearExcelCredenciales(archivo: File): Promise<FilaCredencial[
     const reader = new FileReader()
     reader.onload = e => {
       try {
-        const data = new Uint8Array(e.target!.result as ArrayBuffer)
+        const data  = new Uint8Array(e.target!.result as ArrayBuffer)
         const libro = XLSX.read(data, { type: 'array' })
         const hoja  = libro.Sheets[libro.SheetNames[0]]
-        const filas = XLSX.utils.sheet_to_json<Record<string, unknown>>(hoja)
+
+        // leer como arrays para evitar problemas con nombres de columna
+        const filas = XLSX.utils.sheet_to_json<unknown[]>(hoja, { header: 1 })
+        if (filas.length < 2) { resolve([]); return }
+
+        const headers = (filas[0] as unknown[]).map(h => String(h ?? ''))
+
+        // encontrar índices por nombre de columna, si no se encuentran usar 0 y 1
+        let idxUsuario    = headers.findIndex(esColumnaUsuario)
+        let idxContrasena = headers.findIndex(esColumnaContrasena)
+        if (idxUsuario    === -1) idxUsuario    = 0
+        if (idxContrasena === -1) idxContrasena = 1
 
         const credenciales: FilaCredencial[] = []
-        for (const fila of filas) {
-          const usuario    = buscarClave(fila, ['usuario'])
-          const contrasena = buscarClave(fila, ['contrase', 'password', 'clave'])
+        for (let i = 1; i < filas.length; i++) {
+          const fila      = filas[i] as unknown[]
+          const usuario   = String(fila[idxUsuario]    ?? '').trim()
+          const contrasena = String(fila[idxContrasena] ?? '').trim()
           if (usuario && contrasena) {
             credenciales.push({ usuario, contrasena })
           }
