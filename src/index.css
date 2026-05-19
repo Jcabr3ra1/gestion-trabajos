@@ -54,9 +54,70 @@
   -webkit-font-smoothing: antialiased;
 }
 
-body { margin: 0; }
+/* ═══════════════════════════════════════════════════════════
+   DARK MODE — invierte la escala de neutros y oscurece los
+   fondos pasteles. Verdes y acentos se mantienen.
+═══════════════════════════════════════════════════════════ */
+.dark {
+  --white:     #1e293b;
+  --slate-50:  #0f172a;
+  --slate-100: #1e293b;
+  --slate-200: #334155;
+  --slate-300: #475569;
+  --slate-400: #64748b;
+  --slate-500: #94a3b8;
+  --slate-600: #cbd5e1;
+  --slate-700: #e2e8f0;
+  --slate-800: #f1f5f9;
+  --slate-900: #f8fafc;
+
+  --green-50:  #0a2818;
+  --green-100: #143820;
+
+  --red-50:    #2a1414;
+  --red-100:   #3a1818;
+
+  --amber-50:  #2a1f0d;
+  --amber-100: #3a2812;
+
+  --blue-50:   #0d1f3a;
+  --blue-100:  #142847;
+
+  --purple-100: #2a1438;
+
+  color: var(--slate-800);
+  background: var(--slate-50);
+}
+.dark body { background: var(--slate-50); }
+
+body { margin: 0; background: var(--slate-100); color: var(--slate-800); }
 button { cursor: pointer; font: inherit; }
 input, textarea, select { font: inherit; }
+
+/* Botón de toggle de tema */
+.app-header-right { display: flex; align-items: center; gap: 10px; }
+.theme-toggle {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 6px 11px;
+  font-size: 15px;
+  border-radius: 8px;
+  transition: background 0.15s;
+  line-height: 1;
+}
+.theme-toggle:hover { background: rgba(255,255,255,0.22); }
+
+/* En dark mode, los inputs deben verse bien */
+.dark input, .dark textarea, .dark select {
+  background: var(--slate-100);
+  color: var(--slate-800);
+  border-color: var(--slate-200);
+}
+.dark input::placeholder { color: var(--slate-500); }
+
+/* Texto blanco fijo en toasts/badges no se invierte solo */
+.dark .toast--ok, .dark .toast--err { color: #fff; }
 
 /* ── App shell ─────────────────────────────────────────────── */
 .app { min-height: 100vh; display: flex; flex-direction: column; }
@@ -933,3 +994,75 @@ input, textarea, select { font: inherit; }
 }
 .revisar--ok      { background: var(--blue-50);    color: var(--blue-600);   border: 1px solid var(--blue-100); }
 .revisar--alerta  { background: var(--purple-100); color: var(--purple-600); border: 1px solid var(--purple-100); }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — adaptaciones para mobile
+═══════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .stat-cards { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+  .stat-card { padding: 10px; }
+  .stat-num { font-size: 22px; }
+  .stat-lbl { font-size: 11px; }
+}
+
+@media (max-width: 720px) {
+  .app-main { padding: 12px 10px; }
+  .app-header { padding: 0 14px; height: 56px; }
+  .app-title { font-size: 14px; }
+  .app-subtitle { display: none; }
+
+  /* Toolbar se apila */
+  .toolbar {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    align-items: stretch;
+  }
+  .toolbar-left { flex-direction: column; align-items: stretch; gap: 8px; width: 100%; }
+  .toolbar-left > button { width: 100%; justify-content: center; }
+  .search-wrap { max-width: 100%; min-width: 0; }
+  .filtros { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+  .filtro-btn { flex-shrink: 0; }
+
+  /* Tabla — ocultar columnas no esenciales */
+  .tabla { font-size: 12px; }
+  .tabla th, .tabla td { padding: 8px 6px; }
+  .tabla th:nth-child(1), .tabla td:nth-child(1) { display: none; } /* # */
+  .tabla th:nth-child(4), .tabla td:nth-child(4) { display: none; } /* Usuario */
+  .tabla th:nth-child(5), .tabla td:nth-child(5) { display: none; } /* Mat. count */
+  .td-actions { flex-wrap: wrap; gap: 4px; }
+  .action-btn { padding: 4px 8px; font-size: 11px; }
+  .td-visto { font-size: 10px; }
+  .urg-pill { font-size: 11px; padding: 3px 8px; }
+
+  /* Atención hoy */
+  .atencion { padding: 14px; }
+  .atencion-title { font-size: 15px; }
+  .atencion-item { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .atencion-det { align-self: flex-start; }
+
+  /* Todo al día */
+  .todo-al-dia { padding: 14px; }
+  .todo-al-dia-icon { font-size: 28px; }
+
+  /* Toast */
+  .toast {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
+
+  /* Formulario */
+  .form-page { padding: 0; }
+  .form-card { border-radius: 0; padding: 16px; }
+  .form-grid { grid-template-columns: 1fr !important; }
+  .otra-row { flex-direction: column; align-items: stretch; }
+  .materia-extra { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 420px) {
+  .stat-cards { grid-template-columns: 1fr 1fr !important; }
+  .atencion-est { font-size: 12px; }
+  .atencion-mat { font-size: 11px; }
+}
