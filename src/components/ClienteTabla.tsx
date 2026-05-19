@@ -143,19 +143,19 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                     </div>
                     {visto && <div className="td-visto">{visto}</div>}
                   </td>
-                  <td>
+                  <td onClick={e => e.stopPropagation()}>
                     <code
                       className="td-usuario td-copiable"
-                      onClick={e => { e.stopPropagation(); onCopiar(c.usuario, 'Usuario') }}
+                      onClick={() => onCopiar(c.usuario, 'Usuario')}
                       title="Click para copiar"
                     >
                       {c.usuario}
                     </code>
                   </td>
-                  <td>
+                  <td onClick={e => e.stopPropagation()}>
                     <code
                       className="td-pass td-copiable"
-                      onClick={e => { e.stopPropagation(); onCopiar(c.contrasena, 'Contraseña') }}
+                      onClick={() => onCopiar(c.contrasena, 'Contraseña')}
                       title="Click para copiar"
                     >
                       {c.contrasena}
