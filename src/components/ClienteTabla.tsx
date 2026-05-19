@@ -143,13 +143,17 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                     </div>
                     {visto && <div className="td-visto">{visto}</div>}
                   </td>
-                  <td className="td-cred">
-                    <code className="td-usuario">{c.usuario}</code>
-                    <button className="copy-btn" onClick={e => { e.stopPropagation(); onCopiar(c.usuario, 'Usuario') }} title="Copiar usuario">📋</button>
+                  <td>
+                    <div className="cred-cell">
+                      <code className="td-usuario">{c.usuario}</code>
+                      <button className="copy-btn" onClick={e => { e.stopPropagation(); onCopiar(c.usuario, 'Usuario') }} title="Copiar usuario">📋</button>
+                    </div>
                   </td>
-                  <td className="td-cred">
-                    <code className="td-pass">{c.contrasena}</code>
-                    <button className="copy-btn" onClick={e => { e.stopPropagation(); onCopiar(c.contrasena, 'Contraseña') }} title="Copiar contraseña">📋</button>
+                  <td>
+                    <div className="cred-cell">
+                      <code className="td-pass">{c.contrasena}</code>
+                      <button className="copy-btn" onClick={e => { e.stopPropagation(); onCopiar(c.contrasena, 'Contraseña') }} title="Copiar contraseña">📋</button>
+                    </div>
                   </td>
                   <td><span className="count-pill">{c.materias.length}</span></td>
                   <td className="td-urgencia">

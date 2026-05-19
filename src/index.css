@@ -1235,11 +1235,11 @@ input, textarea, select { font: inherit; }
 /* ═══════════════════════════════════════════════════════════
    COPY BUTTONS / CONTRASEÑA
 ═══════════════════════════════════════════════════════════ */
-.td-cred {
-  white-space: nowrap;
-  display: flex;
+.cred-cell {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
 }
 .td-pass {
   font-family: 'SF Mono', Consolas, monospace;
