@@ -119,6 +119,137 @@ input, textarea, select { font: inherit; }
 /* Texto blanco fijo en toasts/badges no se invierte solo */
 .dark .toast--ok, .dark .toast--err { color: #fff; }
 
+/* ── Overrides puntuales en dark mode ──────────────────────
+   (estilos con colores hardcoded que no usan variables) */
+
+/* Header de tabla — usaba slate-800 que se invierte a claro */
+.dark .tabla thead tr { background: #0b1220; }
+.dark .tabla th { color: var(--slate-500); }
+
+/* Subfilas */
+.dark .tr-sub { background: rgba(255,255,255,0.02) !important; border-bottom: 1px solid var(--slate-200) !important; }
+.dark .tr-sub:hover { background: rgba(255,255,255,0.04) !important; }
+.dark .tr-main:hover { background: rgba(255,255,255,0.04); }
+.dark .tr-main--open { background: rgba(34,197,94,0.08) !important; }
+.dark .tr-main--open:hover { background: rgba(34,197,94,0.12) !important; }
+
+/* Badge de usuario */
+.dark .td-usuario { background: rgba(59,130,246,0.15); color: #93c5fd; }
+
+/* Texto secundario más legible */
+.dark .td-visto,
+.dark .td-empty,
+.dark .td-empty-sub,
+.dark .otras-empty,
+.dark .app-subtitle,
+.dark .stat-lbl,
+.dark .td-fecha { color: var(--slate-500); }
+
+/* Botones de acción — un poco más de contraste */
+.dark .action-btn--edit     { background: rgba(59,130,246,0.15);  color: #93c5fd;  border-color: rgba(59,130,246,0.3); }
+.dark .action-btn--edit:hover { background: rgba(59,130,246,0.25); }
+.dark .action-btn--cargar   { background: rgba(59,130,246,0.18);  color: #93c5fd;  border-color: rgba(59,130,246,0.35); }
+.dark .action-btn--cargar:hover { background: rgba(59,130,246,0.28); }
+.dark .action-btn--calificar{ background: rgba(34,197,94,0.18);   color: #86efac;  border-color: rgba(34,197,94,0.3); }
+.dark .action-btn--calificar:hover { background: rgba(34,197,94,0.28); }
+.dark .action-btn--avanzar  { background: rgba(34,197,94,0.18);   color: #86efac;  border-color: rgba(34,197,94,0.3); }
+.dark .action-btn--avanzar:hover { background: rgba(34,197,94,0.28); }
+.dark .action-btn--reset    { background: rgba(245,158,11,0.18);  color: #fcd34d;  border-color: rgba(245,158,11,0.3); }
+.dark .action-btn--reset:hover { background: rgba(245,158,11,0.28); }
+.dark .action-btn--del      { background: rgba(220,38,38,0.18);   color: #fca5a5;  border-color: rgba(220,38,38,0.3); }
+.dark .action-btn--del:hover { background: rgba(220,38,38,0.28); }
+.dark .action-btn--archive,
+.dark .action-btn--unarchive { background: rgba(148,163,184,0.15); color: #cbd5e1; }
+
+/* Botones de toolbar */
+.dark .btn-xl--export   { background: rgba(59,130,246,0.15); color: #93c5fd; border-color: rgba(59,130,246,0.3); }
+.dark .btn-xl--export:hover { background: rgba(59,130,246,0.25); }
+.dark .btn-xl--import   { background: rgba(245,158,11,0.18); color: #fcd34d; border-color: rgba(245,158,11,0.3); }
+.dark .btn-xl--import:hover:not(:disabled) { background: rgba(245,158,11,0.28); }
+.dark .btn-xl--template { background: rgba(148,163,184,0.12); color: var(--slate-700); border-color: var(--slate-200); }
+.dark .btn-xl--template:hover { background: rgba(148,163,184,0.2); }
+
+/* Filtros */
+.dark .filtro-btn { background: var(--white); color: var(--slate-700); border-color: var(--slate-200); }
+.dark .filtro-btn:hover { background: rgba(34,197,94,0.1); color: var(--green-500); border-color: var(--green-500); }
+.dark .filtro-btn--active { background: var(--green-700); color: #fff; border-color: var(--green-700); }
+
+/* Search bar */
+.dark .search-input { background: var(--white); color: var(--slate-800); border-color: var(--slate-200); }
+.dark .search-input::placeholder { color: var(--slate-500); }
+
+/* Pills de urgencia — pasteles que no se ven bien */
+.dark .urg-pill--vencida  { background: rgba(220,38,38,0.18);  color: #fca5a5; }
+.dark .urg-pill--urgente  { background: rgba(245,158,11,0.18); color: #fcd34d; }
+.dark .urg-pill--revisar  { background: rgba(147,51,234,0.18); color: #d8b4fe; }
+.dark .urg-pill--normal   { background: rgba(148,163,184,0.15); color: #cbd5e1; }
+.dark .urg-pill--completo { background: rgba(34,197,94,0.18);  color: #86efac; }
+.dark .urg-pill--vacio    { background: rgba(148,163,184,0.1); color: var(--slate-500); }
+
+/* Status badges en sub-filas */
+.dark .badge--pendiente  { background: rgba(148,163,184,0.15); color: #cbd5e1; }
+.dark .badge--cargado    { background: rgba(59,130,246,0.18);  color: #93c5fd; }
+.dark .badge--calificado { background: rgba(34,197,94,0.18);   color: #86efac; }
+.dark .badge--vencido    { background: rgba(220,38,38,0.18);   color: #fca5a5; }
+
+/* Count pill (n materias) */
+.dark .count-pill { background: rgba(148,163,184,0.18); color: var(--slate-700); }
+
+/* Countdown */
+.dark .countdown--vencido { color: #fca5a5; }
+.dark .countdown--hoy     { color: #fcd34d; }
+.dark .countdown--urgente { color: #fcd34d; }
+.dark .countdown--pronto  { color: #93c5fd; }
+.dark .countdown--ok      { color: var(--slate-500); }
+
+/* Revisar badge */
+.dark .revisar--ok      { background: rgba(59,130,246,0.15);  color: #93c5fd;   border-color: rgba(59,130,246,0.3); }
+.dark .revisar--alerta  { background: rgba(147,51,234,0.18);  color: #d8b4fe;   border-color: rgba(147,51,234,0.3); }
+
+/* Atención items */
+.dark .atencion-item { background: rgba(255,255,255,0.03); }
+.dark .atencion-item:hover { background: rgba(255,255,255,0.06); }
+.dark .atencion-det--vencida { background: rgba(220,38,38,0.18);  color: #fca5a5; }
+.dark .atencion-det--urgente { background: rgba(245,158,11,0.18); color: #fcd34d; }
+.dark .atencion-det--revisar { background: rgba(147,51,234,0.18); color: #d8b4fe; }
+.dark .atencion-mat { color: var(--slate-500); }
+
+/* Todo al día — gradiente verde se ve raro en dark */
+.dark .todo-al-dia {
+  background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(34,197,94,0.05));
+  border-color: rgba(34,197,94,0.25);
+}
+.dark .todo-al-dia-title { color: #86efac; }
+.dark .todo-al-dia-sub { color: #6ee7b7; }
+
+/* Stat cards */
+.dark .stat-icon--blue  { background: rgba(59,130,246,0.18);  color: #93c5fd; }
+.dark .stat-icon--blue2 { background: rgba(59,130,246,0.18);  color: #93c5fd; }
+.dark .stat-icon--green { background: rgba(34,197,94,0.18);   color: #86efac; }
+.dark .stat-icon--red   { background: rgba(220,38,38,0.18);   color: #fca5a5; }
+.dark .stat-icon--gray  { background: rgba(148,163,184,0.18); color: var(--slate-700); }
+.dark .stat-num--vencido { color: #fca5a5; }
+
+/* Badge archivado */
+.dark .badge-archivado { background: rgba(148,163,184,0.2); color: var(--slate-600); }
+
+/* Tutor en sub-fila */
+.dark .td-materia-tutor { color: var(--slate-500); }
+
+/* Form */
+.dark .field-input--err { border-color: #f87171; }
+.dark .field-err { color: #fca5a5; }
+.dark .materia-fija--activa { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.3); }
+.dark .materia-fija--activa .materia-nombre { color: #86efac; }
+.dark .materia-fecha label, .dark .materia-tutor label { color: #86efac; }
+
+/* Resaltado al llegar */
+.dark .tr-main--resaltado > td { animation: resaltado-pulse-dark 2s ease-out; }
+@keyframes resaltado-pulse-dark {
+  0%   { background-color: rgba(245,158,11,0.25); }
+  100% { background-color: transparent; }
+}
+
 /* ── App shell ─────────────────────────────────────────────── */
 .app { min-height: 100vh; display: flex; flex-direction: column; }
 
