@@ -26,7 +26,10 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
   const [filtro, setFiltro] = useState<Filtro>('activos')
   const [importando, setImportando] = useState(false)
   const [toast, setToast] = useState<{ tipo: 'ok' | 'err'; mensaje: string } | null>(null)
+  const [destinoId, setDestinoId] = useState<string | null>(null)
   const inputArchivoRef = useRef<HTMLInputElement>(null)
+
+  const irACliente = (id: string) => setDestinoId(id)
 
   const mostrarToast = (tipo: 'ok' | 'err', mensaje: string) => {
     setToast({ tipo, mensaje })
@@ -152,7 +155,7 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
               </div>
               <ul className="atencion-lista">
                 {atencion.vencidas.slice(0, 5).map(it => (
-                  <li key={it.materia.id} className="atencion-item" onClick={() => onEditar(it.cliente)}>
+                  <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
                     <div className="atencion-item-main">
                       <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
                       <span className="atencion-mat">{it.materia.nombre}</span>
@@ -174,7 +177,7 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
               </div>
               <ul className="atencion-lista">
                 {atencion.proximas.slice(0, 5).map(it => (
-                  <li key={it.materia.id} className="atencion-item" onClick={() => onEditar(it.cliente)}>
+                  <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
                     <div className="atencion-item-main">
                       <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
                       <span className="atencion-mat">{it.materia.nombre}</span>
@@ -196,7 +199,7 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
               </div>
               <ul className="atencion-lista">
                 {atencion.revisar.slice(0, 5).map(it => (
-                  <li key={it.materia.id} className="atencion-item" onClick={() => onEditar(it.cliente)}>
+                  <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
                     <div className="atencion-item-main">
                       <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
                       <span className="atencion-mat">{it.materia.nombre}</span>
@@ -332,6 +335,8 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
             onArchivar={handleArchivar}
             onDesarchivar={handleDesarchivar}
             onInteraccion={handleInteraccion}
+            destinoId={destinoId}
+            onLlegada={() => setDestinoId(null)}
           />
         )}
       </div>

@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import type { Cliente, EstadoTrabajo } from '../types'
 import { urgenciaCliente, unicaMateriaAccionable, formatVistoHace } from '../utils/urgencia'
 
@@ -10,6 +10,8 @@ interface Props {
   onArchivar: (id: string) => void
   onDesarchivar: (id: string) => void
   onInteraccion: (id: string) => void
+  destinoId?: string | null
+  onLlegada?: () => void
 }
 
 const HOY = new Date()
@@ -68,8 +70,9 @@ function formatFecha(iso: string) {
   })
 }
 
-export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onEliminar, onArchivar, onDesarchivar, onInteraccion }: Props) {
+export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onEliminar, onArchivar, onDesarchivar, onInteraccion, destinoId, onLlegada }: Props) {
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set())
+  const [resaltado, setResaltado] = useState<string | null>(null)
 
   const toggle = (id: string) => {
     let abriendo = false
@@ -85,6 +88,23 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
     })
     if (abriendo) onInteraccion(id)
   }
+
+  useEffect(() => {
+    if (!destinoId) return
+    setExpandidos(prev => {
+      const s = new Set(prev)
+      s.add(destinoId)
+      return s
+    })
+    setResaltado(destinoId)
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`cliente-${destinoId}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+    const t = setTimeout(() => setResaltado(null), 2000)
+    onLlegada?.()
+    return () => clearTimeout(t)
+  }, [destinoId, onLlegada])
 
   return (
     <div className="tabla-wrapper">
@@ -110,7 +130,7 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
 
             return (
               <Fragment key={c.id}>
-                <tr className={`tr-main tr-urg--${urg.nivel} ${abierto ? 'tr-main--open' : ''} ${c.archivado ? 'tr-main--archivado' : ''}`}
+                <tr id={`cliente-${c.id}`} className={`tr-main tr-urg--${urg.nivel} ${abierto ? 'tr-main--open' : ''} ${c.archivado ? 'tr-main--archivado' : ''} ${resaltado === c.id ? 'tr-main--resaltado' : ''}`}
                   onClick={() => toggle(c.id)}>
                   <td className="td-num">{i + 1}</td>
                   <td className="td-arrow">{abierto ? '▾' : '▸'}</td>
