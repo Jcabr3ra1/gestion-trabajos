@@ -1,5 +1,6 @@
 import { Fragment, useState } from 'react'
 import type { Cliente, EstadoTrabajo } from '../types'
+import { urgenciaCliente, unicaMateriaAccionable, formatVistoHace } from '../utils/urgencia'
 
 interface Props {
   clientes: Cliente[]
@@ -94,28 +95,50 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
             <th style={{ width: 32 }} />
             <th>Estudiante</th>
             <th>Usuario</th>
-            <th>Materias</th>
-            <th style={{ width: 180 }}>Acciones</th>
+            <th style={{ width: 60 }}>Mat.</th>
+            <th>Urgencia</th>
+            <th style={{ width: 220 }}>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {clientes.map((c, i) => {
-            const abierto  = expandidos.has(c.id)
-            const listo    = todasCalificadas(c)
+            const abierto = expandidos.has(c.id)
+            const listo   = todasCalificadas(c)
+            const urg     = urgenciaCliente(c)
+            const unica   = unicaMateriaAccionable(c)
+            const visto   = formatVistoHace(c.actualizadoEn, c.creadoEn)
 
             return (
               <Fragment key={c.id}>
-                <tr className={`tr-main ${abierto ? 'tr-main--open' : ''} ${c.archivado ? 'tr-main--archivado' : ''}`}
+                <tr className={`tr-main tr-urg--${urg.nivel} ${abierto ? 'tr-main--open' : ''} ${c.archivado ? 'tr-main--archivado' : ''}`}
                   onClick={() => toggle(c.id)}>
                   <td className="td-num">{i + 1}</td>
                   <td className="td-arrow">{abierto ? '▾' : '▸'}</td>
                   <td className="td-nombre">
-                    {c.nombre || <span className="td-empty">Sin nombre</span>}
-                    {c.archivado && <span className="badge-archivado">Archivado</span>}
+                    <div className="td-nombre-main">
+                      {c.nombre || <span className="td-empty">Sin nombre</span>}
+                      {c.archivado && <span className="badge-archivado">Archivado</span>}
+                    </div>
+                    {visto && <div className="td-visto">{visto}</div>}
                   </td>
                   <td><code className="td-usuario">{c.usuario}</code></td>
                   <td><span className="count-pill">{c.materias.length}</span></td>
+                  <td className="td-urgencia">
+                    <span className={`urg-pill urg-pill--${urg.nivel}`}>
+                      <span className="urg-icon">{urg.icono}</span>
+                      <span className="urg-text">{urg.texto}</span>
+                    </span>
+                  </td>
                   <td className="td-actions" onClick={e => e.stopPropagation()}>
+                    {unica && !c.archivado && (
+                      <button
+                        className={`action-btn action-btn--quick action-btn--${unica.estado === 'pendiente' ? 'cargar' : 'calificar'}`}
+                        onClick={() => onAvanzarMateria(c.id, unica.id)}
+                        title={unica.estado === 'pendiente' ? 'Marcar como cargado' : 'Marcar como calificado'}
+                      >
+                        {unica.estado === 'pendiente' ? '⬆ Cargar' : '✓ Calificar'}
+                      </button>
+                    )}
                     <button className="action-btn action-btn--edit" onClick={() => onEditar(c)}>✏ Editar</button>
                     {listo && !c.archivado && (
                       <button className="action-btn action-btn--archive" onClick={() => onArchivar(c.id)} title="Archivar estudiante">
@@ -133,7 +156,7 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
 
                 {abierto && c.materias.length === 0 && (
                   <tr className="tr-sub">
-                    <td colSpan={6} className="td-empty-sub">
+                    <td colSpan={7} className="td-empty-sub">
                       Sin materias — usa <strong>✏ Editar</strong> para agregar materias y tutores
                     </td>
                   </tr>
@@ -155,7 +178,7 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                         <Countdown fechaCierre={m.fechaCierre} estado={m.estado} />
                         <RevisarBadge estado={m.estado} cargadoEn={m.cargadoEn} />
                       </td>
-                      <td>
+                      <td colSpan={2}>
                         <span className={`status-badge ${cfg.clase}`}>{cfg.label}</span>
                       </td>
                       <td className="td-actions">

@@ -6,6 +6,7 @@ import {
   importarCredenciales, marcarReciente,
 } from '../utils/storage'
 import { exportarCredenciales, parsearExcelCredenciales, descargarPlantilla } from '../utils/excel'
+import { urgenciaCliente, getAtencion } from '../utils/urgencia'
 import ClienteTabla from '../components/ClienteTabla'
 
 interface Props {
@@ -40,30 +41,23 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
     return unsub
   }, [])
 
-  // ordenar por interacción más reciente (recientes arriba)
+  // ordenar por urgencia (vencidas > urgentes > revisar > normal > completo)
+  // empate: por interacción más reciente
   const ordenados = [...clientes].sort((a, b) => {
+    const ua = urgenciaCliente(a)
+    const ub = urgenciaCliente(b)
+    if (ua.score !== ub.score) return ub.score - ua.score
     const ta = a.actualizadoEn ?? a.creadoEn
     const tb = b.actualizadoEn ?? b.creadoEn
     return tb.localeCompare(ta)
   })
 
+  const atencion = getAtencion(clientes)
+  const totalAtencion = atencion.vencidas.length + atencion.proximas.length + atencion.revisar.length
+  const hayActivos = clientes.some(c => !c.archivado)
+
   const activos = ordenados.filter(c => !c.archivado)
   const todasMaterias = activos.flatMap(c => c.materias)
-
-  // próximas a vencer dentro de 5 días (incluyendo hoy)
-  const proximas = todasMaterias.filter(m => {
-    if (m.estado !== 'pendiente') return false
-    const dias = Math.round((new Date(m.fechaCierre + 'T00:00:00').getTime() - HOY.getTime()) / (1000 * 60 * 60 * 24))
-    return dias >= 0 && dias <= 5
-  }).length
-
-  // cargadas hace 3+ días — recordar revisar si ya calificaron
-  const porRevisar = todasMaterias.filter(m => {
-    if (m.estado !== 'cargado') return false
-    if (!m.cargadoEn) return true  // si no hay timestamp (datos viejos), igual recordar
-    const dias = Math.round((Date.now() - new Date(m.cargadoEn).getTime()) / (1000 * 60 * 60 * 24))
-    return dias >= 3
-  }).length
 
   const stats = {
     estudiantes: activos.length,
@@ -143,28 +137,87 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
 
   return (
     <div className="dashboard">
-      {(stats.vencidas > 0 || proximas > 0 || porRevisar > 0) && (
-        <div className="avisos">
-          {stats.vencidas > 0 && (
-            <div className="aviso aviso--vencido">
-              <span className="aviso-icon">🔴</span>
-              <strong>{stats.vencidas}</strong>&nbsp;materia{stats.vencidas !== 1 ? 's' : ''} vencida{stats.vencidas !== 1 ? 's' : ''}
-              <button className="aviso-link" onClick={() => setFiltro('vencidos')}>Ver</button>
+      {totalAtencion > 0 ? (
+        <div className="atencion">
+          <div className="atencion-header">
+            <span className="atencion-icon">📌</span>
+            <h2 className="atencion-title">Atención hoy</h2>
+            <span className="atencion-count">{totalAtencion}</span>
+          </div>
+
+          {atencion.vencidas.length > 0 && (
+            <div className="atencion-grupo atencion-grupo--vencida">
+              <div className="atencion-grupo-header">
+                🔴 Vencidas <span className="atencion-grupo-count">({atencion.vencidas.length})</span>
+              </div>
+              <ul className="atencion-lista">
+                {atencion.vencidas.slice(0, 5).map(it => (
+                  <li key={it.materia.id} className="atencion-item" onClick={() => onEditar(it.cliente)}>
+                    <div className="atencion-item-main">
+                      <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
+                      <span className="atencion-mat">{it.materia.nombre}</span>
+                    </div>
+                    <span className="atencion-det atencion-det--vencida">{it.detalle}</span>
+                  </li>
+                ))}
+                {atencion.vencidas.length > 5 && (
+                  <li className="atencion-mas">y {atencion.vencidas.length - 5} más…</li>
+                )}
+              </ul>
             </div>
           )}
-          {proximas > 0 && (
-            <div className="aviso aviso--proxima">
-              <span className="aviso-icon">⏰</span>
-              <strong>{proximas}</strong>&nbsp;por vencer en los próximos 5 días
+
+          {atencion.proximas.length > 0 && (
+            <div className="atencion-grupo atencion-grupo--urgente">
+              <div className="atencion-grupo-header">
+                ⚠ Por vencer <span className="atencion-grupo-count">({atencion.proximas.length})</span>
+              </div>
+              <ul className="atencion-lista">
+                {atencion.proximas.slice(0, 5).map(it => (
+                  <li key={it.materia.id} className="atencion-item" onClick={() => onEditar(it.cliente)}>
+                    <div className="atencion-item-main">
+                      <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
+                      <span className="atencion-mat">{it.materia.nombre}</span>
+                    </div>
+                    <span className="atencion-det atencion-det--urgente">{it.detalle}</span>
+                  </li>
+                ))}
+                {atencion.proximas.length > 5 && (
+                  <li className="atencion-mas">y {atencion.proximas.length - 5} más…</li>
+                )}
+              </ul>
             </div>
           )}
-          {porRevisar > 0 && (
-            <div className="aviso aviso--revisar">
-              <span className="aviso-icon">👀</span>
-              <strong>{porRevisar}</strong>&nbsp;cargada{porRevisar !== 1 ? 's' : ''} hace 3+ días — revisar si ya calificaron
-              <button className="aviso-link" onClick={() => setFiltro('cargados')}>Ver</button>
+
+          {atencion.revisar.length > 0 && (
+            <div className="atencion-grupo atencion-grupo--revisar">
+              <div className="atencion-grupo-header">
+                👀 Revisar si calificaron <span className="atencion-grupo-count">({atencion.revisar.length})</span>
+              </div>
+              <ul className="atencion-lista">
+                {atencion.revisar.slice(0, 5).map(it => (
+                  <li key={it.materia.id} className="atencion-item" onClick={() => onEditar(it.cliente)}>
+                    <div className="atencion-item-main">
+                      <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
+                      <span className="atencion-mat">{it.materia.nombre}</span>
+                    </div>
+                    <span className="atencion-det atencion-det--revisar">{it.detalle}</span>
+                  </li>
+                ))}
+                {atencion.revisar.length > 5 && (
+                  <li className="atencion-mas">y {atencion.revisar.length - 5} más…</li>
+                )}
+              </ul>
             </div>
           )}
+        </div>
+      ) : hayActivos && (
+        <div className="todo-al-dia">
+          <span className="todo-al-dia-icon">🎉</span>
+          <div>
+            <h2 className="todo-al-dia-title">Todo al día</h2>
+            <p className="todo-al-dia-sub">No tenés materias vencidas, por vencer ni pendientes de revisar.</p>
+          </div>
         </div>
       )}
 

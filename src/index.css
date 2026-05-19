@@ -392,6 +392,60 @@ input, textarea, select { font: inherit; }
   50% { opacity: 0.6; }
 }
 
+/* ── Bordes de urgencia por fila ──────────────────────────── */
+.tr-urg--vencida  > td:first-child { border-left: 4px solid var(--red-600);    }
+.tr-urg--urgente  > td:first-child { border-left: 4px solid var(--amber-600);  }
+.tr-urg--revisar  > td:first-child { border-left: 4px solid var(--purple-600); }
+.tr-urg--normal   > td:first-child { border-left: 4px solid transparent;       }
+.tr-urg--completo > td:first-child { border-left: 4px solid var(--green-500);  }
+.tr-urg--vacio    > td:first-child { border-left: 4px solid var(--slate-300);  }
+
+/* ── Urgencia pill ─────────────────────────────────────────── */
+.td-urgencia { padding: 8px 12px; }
+.urg-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.urg-icon { font-size: 12px; }
+.urg-pill--vencida  { background: var(--red-100);    color: var(--red-700);    }
+.urg-pill--urgente  { background: var(--amber-100);  color: var(--amber-600);  }
+.urg-pill--revisar  { background: var(--purple-100); color: var(--purple-600); }
+.urg-pill--normal   { background: var(--slate-100);  color: var(--slate-600);  }
+.urg-pill--completo { background: var(--green-100);  color: var(--green-700);  }
+.urg-pill--vacio    { background: var(--slate-100);  color: var(--slate-400);  font-style: italic; }
+
+/* ── Visto hace X días ────────────────────────────────────── */
+.td-nombre-main { display: flex; align-items: center; }
+.td-visto {
+  font-size: 11px;
+  color: var(--slate-400);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+/* ── Acción rápida (cargar / calificar) ──────────────────── */
+.action-btn--quick {
+  font-weight: 800;
+}
+.action-btn--cargar {
+  background: var(--blue-50);
+  color: var(--blue-600);
+  border: 1px solid var(--blue-100);
+}
+.action-btn--cargar:hover { background: var(--blue-100); }
+.action-btn--calificar {
+  background: var(--green-100);
+  color: var(--green-800);
+  border: 1px solid var(--green-100);
+}
+.action-btn--calificar:hover { background: var(--green-50); border-color: var(--green-500); }
+
 /* ── Archivado ─────────────────────────────────────────────── */
 .tr-main--archivado { opacity: 0.65; }
 .badge-archivado {
@@ -704,39 +758,111 @@ input, textarea, select { font: inherit; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Avisos (banner superior) ─────────────────────────────── */
-.avisos {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
+/* ── Atención hoy ──────────────────────────────────────────── */
+.atencion {
+  background: var(--white);
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
-.aviso {
+.atencion-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  border: 1px solid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--slate-100);
 }
-.aviso strong { font-weight: 800; font-size: 15px; }
-.aviso-icon { font-size: 16px; }
-.aviso--vencido { background: var(--red-50); border-color: var(--red-100); color: var(--red-700); }
-.aviso--proxima { background: var(--amber-50); border-color: var(--amber-100); color: var(--amber-600); }
-.aviso--revisar { background: var(--purple-100); border-color: var(--purple-100); color: var(--purple-600); }
-.aviso-link {
-  margin-left: 6px;
-  background: transparent;
-  border: 1px solid currentColor;
-  color: inherit;
+.atencion-icon { font-size: 22px; }
+.atencion-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--slate-800);
+  letter-spacing: -0.2px;
+  margin: 0;
+}
+.atencion-count {
+  margin-left: auto;
+  background: var(--red-600);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
   padding: 3px 10px;
-  border-radius: 6px;
+  border-radius: 12px;
+  min-width: 26px;
+  text-align: center;
+}
+.atencion-grupo { margin-top: 12px; }
+.atencion-grupo:first-of-type { margin-top: 0; }
+.atencion-grupo-header {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.atencion-grupo-count { font-weight: 600; color: var(--slate-500); }
+.atencion-grupo--vencida .atencion-grupo-header { color: var(--red-700); }
+.atencion-grupo--urgente .atencion-grupo-header { color: var(--amber-600); }
+.atencion-grupo--revisar .atencion-grupo-header { color: var(--purple-600); }
+
+.atencion-lista { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.atencion-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--slate-50);
+  transition: background 0.12s;
+}
+.atencion-item:hover { background: var(--slate-100); }
+.atencion-item-main { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.atencion-est { font-weight: 700; font-size: 13px; color: var(--slate-800); }
+.atencion-mat { font-size: 12px; color: var(--slate-500); }
+.atencion-det {
   font-size: 12px;
   font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 10px;
+  white-space: nowrap;
 }
-.aviso-link:hover { background: rgba(0,0,0,0.05); }
+.atencion-det--vencida { background: var(--red-100);    color: var(--red-700); }
+.atencion-det--urgente { background: var(--amber-100);  color: var(--amber-600); }
+.atencion-det--revisar { background: var(--purple-100); color: var(--purple-600); }
+.atencion-mas {
+  text-align: center;
+  font-size: 11px;
+  color: var(--slate-400);
+  font-style: italic;
+  padding: 4px;
+}
+
+/* ── Todo al día ──────────────────────────────────────────── */
+.todo-al-dia {
+  background: linear-gradient(135deg, var(--green-50), var(--green-100));
+  border: 1px solid var(--green-100);
+  border-radius: 14px;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.todo-al-dia-icon { font-size: 36px; }
+.todo-al-dia-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--green-800);
+  margin: 0 0 2px 0;
+}
+.todo-al-dia-sub { font-size: 13px; color: var(--green-700); margin: 0; }
 
 /* ── Plantilla button ──────────────────────────────────────── */
 .btn-xl--template {
