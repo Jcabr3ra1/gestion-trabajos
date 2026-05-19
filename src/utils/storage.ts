@@ -54,6 +54,10 @@ export async function avanzarEstadoMateria(clienteId: string, materiaId: string,
   await updateDoc(doc(db, COL, clienteId), { materias: actualizadas, actualizadoEn: ahora() })
 }
 
+export async function marcarReciente(id: string): Promise<void> {
+  await updateDoc(doc(db, COL, id), { actualizadoEn: ahora() })
+}
+
 export async function archivarCliente(id: string): Promise<void> {
   await updateDoc(doc(db, COL, id), { archivado: true, actualizadoEn: ahora() })
 }

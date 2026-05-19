@@ -8,6 +8,7 @@ interface Props {
   onEliminar: (id: string) => void
   onArchivar: (id: string) => void
   onDesarchivar: (id: string) => void
+  onInteraccion: (id: string) => void
 }
 
 const HOY = new Date()
@@ -57,15 +58,23 @@ function formatFecha(iso: string) {
   })
 }
 
-export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onEliminar, onArchivar, onDesarchivar }: Props) {
+export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onEliminar, onArchivar, onDesarchivar, onInteraccion }: Props) {
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set())
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    let abriendo = false
     setExpandidos(prev => {
       const s = new Set(prev)
-      s.has(id) ? s.delete(id) : s.add(id)
+      if (s.has(id)) {
+        s.delete(id)
+      } else {
+        s.add(id)
+        abriendo = true
+      }
       return s
     })
+    if (abriendo) onInteraccion(id)
+  }
 
   return (
     <div className="tabla-wrapper">

@@ -3,7 +3,7 @@ import type { Cliente } from '../types'
 import {
   suscribirClientes, eliminarCliente,
   avanzarEstadoMateria, archivarCliente, desarchivarCliente,
-  importarCredenciales,
+  importarCredenciales, marcarReciente,
 } from '../utils/storage'
 import { exportarCredenciales, parsearExcelCredenciales, descargarPlantilla } from '../utils/excel'
 import ClienteTabla from '../components/ClienteTabla'
@@ -94,6 +94,7 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
 
   const handleArchivar   = async (id: string) => { await archivarCliente(id) }
   const handleDesarchivar = async (id: string) => { await desarchivarCliente(id) }
+  const handleInteraccion = (id: string) => { void marcarReciente(id) }
 
   const handleExportar = () => {
     const activos = clientes.filter(c => !c.archivado)
@@ -262,6 +263,7 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
             onEliminar={handleEliminar}
             onArchivar={handleArchivar}
             onDesarchivar={handleDesarchivar}
+            onInteraccion={handleInteraccion}
           />
         )}
       </div>
