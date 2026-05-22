@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Cliente } from '../types'
 import {
-  suscribirClientes, eliminarCliente,
+  suscribirClientes, eliminarCliente, actualizarCliente,
   avanzarEstadoMateria, archivarCliente, desarchivarCliente,
   importarCredenciales, marcarReciente, calificarTodoMaterias, resetearTodoMaterias,
 } from '../utils/storage'
@@ -98,11 +98,25 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
     const cliente = clientes.find(c => c.id === clienteId)
     if (!cliente) return
     const materias = cliente.materias ?? []
+
     if (materias.length === 0) {
-      mostrarToast('err', 'Este estudiante no tiene materias registradas')
+      if (!window.confirm('Este estudiante no tiene materias registradas. ¿Marcar como completado de todos modos?')) return
+      const hoy = new Date().toISOString().split('T')[0]
+      await actualizarCliente(clienteId, {
+        materias: [{
+          id: crypto.randomUUID(),
+          nombre: 'Trabajos',
+          fechaCierre: hoy,
+          estado: 'calificado' as const,
+          tutor: '',
+          cargadoEn: new Date().toISOString(),
+        }],
+      }, tablaId)
+      mostrarToast('ok', 'Estudiante marcado como completado')
       return
     }
-    const todasCalificadas = materias.length > 0 && materias.every(m => m.estado === 'calificado')
+
+    const todasCalificadas = materias.every(m => m.estado === 'calificado')
     if (todasCalificadas) {
       if (!window.confirm('¿Volver TODAS las materias de este estudiante a PENDIENTE?')) return
       await resetearTodoMaterias(clienteId, materias, tablaId)
