@@ -171,13 +171,13 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onCalificarTo
                         {unica.estado === 'pendiente' ? '⬆ Cargar' : '✓ Calificar'}
                       </button>
                     )}
-                    {!listo && !c.archivado && (
+                    {!c.archivado && (
                       <button
-                        className="action-btn action-btn--calificar-todo"
+                        className={`action-btn ${listo ? 'action-btn--reset-todo' : 'action-btn--calificar-todo'}`}
                         onClick={() => onCalificarTodo(c.id)}
-                        title="Marcar todas las materias como calificadas"
+                        title={listo ? 'Volver todas las materias a pendiente' : 'Marcar todas las materias como calificadas'}
                       >
-                        ✓ Calificar todo
+                        {listo ? '↺ Resetear todo' : '✓ Calificar todo'}
                       </button>
                     )}
                     <button className="action-btn action-btn--edit" onClick={() => onEditar(c)}>✏ Editar</button>

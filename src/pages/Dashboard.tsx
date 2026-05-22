@@ -3,7 +3,7 @@ import type { Cliente } from '../types'
 import {
   suscribirClientes, eliminarCliente,
   avanzarEstadoMateria, archivarCliente, desarchivarCliente,
-  importarCredenciales, marcarReciente, calificarTodoMaterias,
+  importarCredenciales, marcarReciente, calificarTodoMaterias, resetearTodoMaterias,
 } from '../utils/storage'
 import { exportarCredenciales, parsearExcelCredenciales, descargarPlantilla } from '../utils/excel'
 import { urgenciaCliente, getAtencion } from '../utils/urgencia'
@@ -102,8 +102,14 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
       mostrarToast('err', 'Este estudiante no tiene materias registradas')
       return
     }
-    if (!window.confirm('¿Marcar TODAS las materias de este estudiante como calificadas?')) return
-    await calificarTodoMaterias(clienteId, materias, tablaId)
+    const todasCalificadas = materias.length > 0 && materias.every(m => m.estado === 'calificado')
+    if (todasCalificadas) {
+      if (!window.confirm('¿Volver TODAS las materias de este estudiante a PENDIENTE?')) return
+      await resetearTodoMaterias(clienteId, materias, tablaId)
+    } else {
+      if (!window.confirm('¿Marcar TODAS las materias de este estudiante como CALIFICADAS?')) return
+      await calificarTodoMaterias(clienteId, materias, tablaId)
+    }
   }
 
   const handleEliminar = async (id: string) => {

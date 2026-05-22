@@ -116,6 +116,20 @@ export async function calificarTodoMaterias(
   await updateDoc(clienteDoc(clienteId, tablaId), { materias: actualizadas, actualizadoEn: ts })
 }
 
+export async function resetearTodoMaterias(
+  clienteId: string,
+  materias: Materia[],
+  tablaId?: string
+): Promise<void> {
+  const ts = ahora()
+  const actualizadas = materias.map(m => ({
+    ...m,
+    estado: 'pendiente' as EstadoTrabajo,
+    cargadoEn: '',
+  }))
+  await updateDoc(clienteDoc(clienteId, tablaId), { materias: actualizadas, actualizadoEn: ts })
+}
+
 export function nuevaMateria(nombre: string, fechaCierre: string, tutor: string = ''): Materia {
   return { id: crypto.randomUUID(), nombre, fechaCierre, estado: 'pendiente', tutor }
 }
