@@ -239,17 +239,25 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
 
               {form.materias.map((m, i) => (
                 <div key={m.id} className="materia-card">
-                  <div className="field" style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 'auto' }}>
-                    <input
-                      type="checkbox"
-                      id={`preinscrito-${m.id}`}
-                      checked={m.estado === 'preinscrito'}
-                      onChange={e => setMatEstado(i, e.target.checked ? 'preinscrito' : 'pendiente')}
-                      style={{ width: 18, height: 18, accentColor: 'var(--green-600)', cursor: 'pointer' }}
-                    />
-                    <label htmlFor={`preinscrito-${m.id}`} style={{ fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <div className="field">
+                    <label>Estado</label>
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={m.estado === 'preinscrito'}
+                      className={`check-preinscrito${m.estado === 'preinscrito' ? ' check-preinscrito--on' : ''}`}
+                      onClick={() => setMatEstado(i, m.estado === 'preinscrito' ? 'pendiente' : 'preinscrito')}
+                      title="Marcar esta materia como preinscrita"
+                    >
+                      <span className="check-preinscrito-box">
+                        {m.estado === 'preinscrito' && (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12 }}>
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </span>
                       Preinscrito
-                    </label>
+                    </button>
                   </div>
                   <div className="field">
                     <label>Materia</label>

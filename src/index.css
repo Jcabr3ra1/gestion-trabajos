@@ -271,7 +271,6 @@ input, textarea, select {
 .btn-icon-svg {
   width: 16px;
   height: 16px;
-  fill: currentColor;
 }
 
 /* Back Button */
@@ -1013,7 +1012,7 @@ input, textarea, select {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .action-btn {
@@ -1582,31 +1581,50 @@ input, textarea, select {
   border-color: var(--danger-text);
 }
 
-/* Checkbox wrapper custom */
-.materia-check-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  user-select: none;
-}
-
-/* Custom Checkbox Input */
-.custom-checkbox {
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--border-color);
-  border-radius: 4px;
+/* Casilla "Preinscrito" en las materias del formulario */
+.check-preinscrito {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
   transition: var(--transition-smooth);
 }
 
-.custom-checkbox--active {
-  background-color: var(--brand-primary);
-  border-color: var(--brand-primary);
+.check-preinscrito:hover {
+  border-color: var(--brand-primary-border);
+  color: var(--text-primary);
+}
+
+.check-preinscrito-box {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 2px solid var(--border-color-hover);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: #ffffff;
+  transition: var(--transition-smooth);
+}
+
+.check-preinscrito--on {
+  background: var(--brand-primary-light);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.check-preinscrito--on .check-preinscrito-box {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
 }
 
 /* Form footer controls */
@@ -1937,6 +1955,122 @@ input, textarea, select {
   background: var(--danger-light) !important;
   color: var(--danger-text) !important;
   opacity: 1 !important;
+}
+
+/* ── Menú desplegable (acciones agrupadas) ── */
+.menu-panel {
+  position: fixed;
+  z-index: 500;
+  min-width: 210px;
+  max-width: calc(100vw - 16px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-premium);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: menu-pop 0.14s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+@keyframes menu-pop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: left;
+  white-space: nowrap;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.menu-item:hover {
+  background: var(--bg-app);
+  color: var(--text-primary);
+}
+
+.menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.menu-item:hover .menu-item-icon {
+  color: var(--brand-primary);
+}
+
+.menu-item-label {
+  flex: 1;
+}
+
+.menu-item--danger {
+  color: var(--danger-text);
+  margin-top: 4px;
+  border-top: 1px solid var(--border-color);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.menu-item--danger .menu-item-icon {
+  color: var(--danger);
+}
+
+.menu-item--danger:hover {
+  background: var(--danger-light);
+  color: var(--danger-text);
+}
+
+.menu-item--danger:hover .menu-item-icon {
+  color: var(--danger-text);
+}
+
+/* Botón "⋯" de cada fila */
+.action-btn--menu {
+  background: var(--bg-app);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+  padding: 6px 9px;
+}
+
+.action-btn--menu:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+
+.action-btn--menu[aria-expanded="true"] {
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  border-color: var(--brand-primary-border);
+}
+
+/* Botón "Excel" de la barra superior */
+.btn-xl--excel {
+  background: var(--bg-app);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.btn-xl--excel:hover:not(:disabled) {
+  background: var(--border-color);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.btn-xl--excel[aria-expanded="true"] {
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  border-color: var(--brand-primary-border);
 }
 
 /* Responsive Overrides */

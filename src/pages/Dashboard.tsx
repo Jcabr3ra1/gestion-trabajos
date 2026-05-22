@@ -8,6 +8,7 @@ import {
 import { exportarCredenciales, parsearExcelCredenciales, descargarPlantilla } from '../utils/excel'
 import { urgenciaCliente, getAtencion } from '../utils/urgencia'
 import ClienteTabla from '../components/ClienteTabla'
+import Menu from '../components/Menu'
 
 interface Props {
   tablaId: string
@@ -19,6 +20,30 @@ type Filtro = 'activos' | 'vencidos' | 'cargados' | 'calificados' | 'archivados'
 
 const HOY = new Date()
 HOY.setHours(0, 0, 0, 0)
+
+/* ── Iconos del menú de Excel ── */
+const iconExportar = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+)
+const iconImportar = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </svg>
+)
+const iconPlantilla = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </svg>
+)
 
 export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
   const [clientes, setClientes] = useState<Cliente[]>([])
@@ -300,7 +325,7 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
           </span>
           <div>
             <h2 className="todo-al-dia-title">Todo al día</h2>
-            <p className="todo-al-dia-sub">No tenés materias vencidas, por vencer ni pendientes de revisar.</p>
+            <p className="todo-al-dia-sub">No hay materias vencidas, por vencer, para revisar ni preinscripciones por activar.</p>
           </div>
         </div>
       )}
@@ -380,42 +405,30 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
             </svg>
             Nuevo estudiante
           </button>
-          <button className="btn-xl btn-xl--export" onClick={handleExportar} title="Exportar usuario y contraseña a Excel">
-            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Exportar Excel
-          </button>
-          <button
-            className="btn-xl btn-xl--import"
-            onClick={() => inputArchivoRef.current?.click()}
+          <Menu
+            className="btn-xl btn-xl--excel"
+            align="start"
             disabled={importando}
-            title="Importar contraseñas desde Excel"
+            title="Exportar, importar o descargar plantilla de Excel"
+            ariaLabel="Opciones de Excel"
+            items={[
+              { label: 'Exportar a Excel', icon: iconExportar, onClick: handleExportar },
+              { label: 'Importar desde Excel', icon: iconImportar, onClick: () => inputArchivoRef.current?.click() },
+              { label: 'Descargar plantilla', icon: iconPlantilla, onClick: descargarPlantilla },
+            ]}
           >
-            {importando ? (
-              'Importando…'
-            ) : (
-              <>
-                <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="17 8 12 3 7 8"></polyline>
-                  <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                Importar Excel
-              </>
-            )}
-          </button>
-          <button className="btn-xl btn-xl--template" onClick={descargarPlantilla} title="Descargar plantilla Excel vacía">
-            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
+            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}>
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="3" y1="15" x2="21" y2="15"></line>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+              <line x1="15" y1="3" x2="15" y2="21"></line>
             </svg>
-            Plantilla
-          </button>
+            {importando ? 'Importando…' : 'Excel'}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 13, height: 13, marginLeft: 2 }}>
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </Menu>
           <input
             ref={inputArchivoRef}
             type="file"
@@ -470,7 +483,7 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
                     </svg>
                   </div>
                   <p className="empty-title">Sin estudiantes</p>
-                  <p className="empty-sub">Haz clic en <strong>＋ Nuevo estudiante</strong> para comenzar.</p>
+                  <p className="empty-sub">Haz clic en <strong>Nuevo estudiante</strong> para comenzar.</p>
                 </>
               : filtro === 'archivados'
               ? <>

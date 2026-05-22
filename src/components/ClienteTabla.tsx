@@ -1,6 +1,7 @@
 import { Fragment, useState, useEffect } from 'react'
 import type { Cliente, EstadoTrabajo } from '../types'
 import { urgenciaCliente, unicaMateriaAccionable, formatVistoHace } from '../utils/urgencia'
+import Menu, { type MenuItem } from './Menu'
 
 interface Props {
   clientes: Cliente[]
@@ -15,6 +16,44 @@ interface Props {
   destinoId?: string | null
   onLlegada?: () => void
 }
+
+/* ── Iconos del menú de acciones ── */
+const iconCheckAll = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+)
+const iconReset = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+  </svg>
+)
+const iconArchive = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+    <polyline points="21 8 21 21 3 21 3 8" />
+    <rect x="1" y="3" width="22" height="5" />
+    <line x1="10" y1="12" x2="14" y2="12" />
+  </svg>
+)
+const iconUnarchive = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+    <polyline points="1 4 1 10 7 10" />
+    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+  </svg>
+)
+const iconTrash = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+  </svg>
+)
+const iconKebab = (
+  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 18, height: 18 }}>
+    <circle cx="12" cy="5" r="1.7" />
+    <circle cx="12" cy="12" r="1.7" />
+    <circle cx="12" cy="19" r="1.7" />
+  </svg>
+)
 
 const HOY = new Date()
 HOY.setHours(0, 0, 0, 0)
@@ -90,12 +129,12 @@ function RevisarBadge({ estado, cargadoEn }: { estado: EstadoTrabajo; cargadoEn?
   )
 }
 
-const ESTADO_CONFIG: Record<EstadoReal, { label: string; clase: string; siguiente: string }> = {
-  preinscrito: { label: 'Preinscrito', clase: 'badge--preinscrito', siguiente: '→ Marcar pendiente' },
-  pendiente:   { label: 'Pendiente',   clase: 'badge--pendiente',   siguiente: '→ Marcar cargado' },
-  cargado:     { label: 'Cargado',     clase: 'badge--cargado',     siguiente: '→ Marcar calificado' },
-  calificado:  { label: 'Calificado',  clase: 'badge--calificado',  siguiente: '↺ Resetear' },
-  vencido:     { label: 'Vencido',     clase: 'badge--vencido',     siguiente: '→ Marcar cargado' },
+const ESTADO_CONFIG: Record<EstadoReal, { label: string; clase: string }> = {
+  preinscrito: { label: 'Preinscrito', clase: 'badge--preinscrito' },
+  pendiente:   { label: 'Pendiente',   clase: 'badge--pendiente' },
+  cargado:     { label: 'Cargado',     clase: 'badge--cargado' },
+  calificado:  { label: 'Calificado',  clase: 'badge--calificado' },
+  vencido:     { label: 'Vencido',     clase: 'badge--vencido' },
 }
 
 function todasCalificadas(c: Cliente): boolean {
@@ -157,6 +196,22 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onCalificarTo
             const urg     = urgenciaCliente(c)
             const unica   = unicaMateriaAccionable(c)
             const visto   = formatVistoHace(c.actualizadoEn, c.creadoEn)
+
+            const accionesMenu: MenuItem[] = []
+            if (!c.archivado) {
+              accionesMenu.push({
+                label: listo ? 'Volver todo a pendiente' : 'Calificar todo',
+                icon: listo ? iconReset : iconCheckAll,
+                onClick: () => onCalificarTodo(c.id),
+              })
+            }
+            if (listo && !c.archivado) {
+              accionesMenu.push({ label: 'Archivar estudiante', icon: iconArchive, onClick: () => onArchivar(c.id) })
+            }
+            if (c.archivado) {
+              accionesMenu.push({ label: 'Desarchivar estudiante', icon: iconUnarchive, onClick: () => onDesarchivar(c.id) })
+            }
+            accionesMenu.push({ label: 'Eliminar estudiante', icon: iconTrash, danger: true, onClick: () => onEliminar(c.id) })
 
             return (
               <Fragment key={c.id}>
@@ -234,29 +289,6 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onCalificarTo
                         )}
                       </button>
                     )}
-                    {!c.archivado && (
-                      <button
-                        className={`action-btn ${listo ? 'action-btn--reset-todo' : 'action-btn--calificar-todo'}`}
-                        onClick={() => onCalificarTodo(c.id)}
-                        title={listo ? 'Volver todas las materias a pendiente' : 'Marcar todas las materias como calificadas'}
-                      >
-                        {listo ? (
-                          <>
-                            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 11, height: 11, marginRight: 4 }}>
-                              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-                            </svg>
-                            Resetear todo
-                          </>
-                        ) : (
-                          <>
-                            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 11, height: 11, marginRight: 4 }}>
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                            Calificar todo
-                          </>
-                        )}
-                      </button>
-                    )}
                     <button className="action-btn action-btn--edit" onClick={() => onEditar(c)}>
                       <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 11, height: 11, marginRight: 4 }}>
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -264,34 +296,21 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onCalificarTo
                       </svg>
                       Editar
                     </button>
-                    {listo && !c.archivado && (
-                      <button className="action-btn action-btn--archive" onClick={() => onArchivar(c.id)} title="Archivar estudiante">
-                        <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 11, height: 11 }}>
-                          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                        </svg>
-                      </button>
-                    )}
-                    {c.archivado && (
-                      <button className="action-btn action-btn--unarchive" onClick={() => onDesarchivar(c.id)} title="Desarchivar">
-                        <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 11, height: 11 }}>
-                          <polyline points="1 4 1 10 7 10" />
-                          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1.05 10" />
-                        </svg>
-                      </button>
-                    )}
-                    <button className="action-btn action-btn--del" onClick={() => onEliminar(c.id)} title="Eliminar">
-                      <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 11, height: 11 }}>
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      </svg>
-                    </button>
+                    <Menu
+                      className="action-btn action-btn--menu"
+                      title="Más acciones"
+                      ariaLabel="Más acciones"
+                      items={accionesMenu}
+                    >
+                      {iconKebab}
+                    </Menu>
                   </td>
                 </tr>
 
                 {abierto && c.materias.length === 0 && (
                   <tr className="tr-sub">
                     <td colSpan={8} className="td-empty-sub">
-                      Sin materias — usa <strong>✏ Editar</strong> para agregar materias y tutores
+                      Sin materias — usá el botón <strong>Editar</strong> para agregar materias y tutores
                     </td>
                   </tr>
                 )}
