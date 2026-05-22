@@ -88,6 +88,7 @@ export async function avanzarEstadoMateria(
       ...m,
       estado: nuevoEstado,
       cargadoEn: nuevoEstado === 'cargado' ? ts : '',
+      preinscritoEn: nuevoEstado === 'preinscrito' ? ts : '',
     }
   })
   await updateDoc(clienteDoc(clienteId, tablaId), { materias: actualizadas, actualizadoEn: ts })

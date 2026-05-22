@@ -16,6 +16,7 @@ interface MateriaForm {
   tutor: string
   estado: EstadoTrabajo
   cargadoEn?: string
+  preinscritoEn?: string
 }
 
 interface FormData {
@@ -34,6 +35,7 @@ function materiasIniciales(materias: Materia[]): MateriaForm[] {
     tutor: m.tutor ?? '',
     estado: m.estado,
     cargadoEn: m.cargadoEn,
+    preinscritoEn: m.preinscritoEn,
   }))
 }
 
@@ -81,6 +83,16 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
     setErrores(prev => ({ ...prev, [`mat_${idx}_${campo}`]: '' }))
   }
 
+  const setMatEstado = (idx: number, estado: EstadoTrabajo) => {
+    setForm(prev => ({
+      ...prev,
+      materias: prev.materias.map((m, i) => (i === idx ? { ...m, estado } : m)),
+    }))
+    if (estado === 'preinscrito') {
+      setErrores(prev => ({ ...prev, [`mat_${idx}_fechaCierre`]: '' }))
+    }
+  }
+
   const quitarMat = (idx: number) =>
     setForm(prev => ({ ...prev, materias: prev.materias.filter((_, i) => i !== idx) }))
 
@@ -106,6 +118,7 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
       estado: m.estado,
       tutor: m.tutor.trim(),
       cargadoEn: m.cargadoEn ?? '',
+      preinscritoEn: m.estado === 'preinscrito' ? (m.preinscritoEn || new Date().toISOString()) : '',
     }))
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -184,23 +197,24 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
                 {sugerencias.map(s => <option key={s} value={s} />)}
               </datalist>
 
-              <div className="field field--full" style={{ marginBottom: 14, maxWidth: 320 }}>
-                <label>Estado del estudiante <span className="field-opt">opcional</span></label>
-                <select
-                  value={form.estadoGeneral}
-                  onChange={e => setField('estadoGeneral', e.target.value as EstadoGeneral)}
-                >
-                  <option value="activo">Activo</option>
-                  <option value="preinscrito">Preinscrito</option>
-                </select>
-              </div>
-
               {form.materias.length === 0 && (
                 <p className="otras-empty">Sin materias. Usá el botón <strong>＋ Agregar materia</strong> arriba.</p>
               )}
 
               {form.materias.map((m, i) => (
                 <div key={m.id} className="materia-card">
+                  <div className="field" style={{ minWidth: 140 }}>
+                    <label>Estado</label>
+                    <select
+                      value={m.estado}
+                      onChange={e => setMatEstado(i, e.target.value as EstadoTrabajo)}
+                    >
+                      <option value="preinscrito">Preinscrito</option>
+                      <option value="pendiente">Pendiente</option>
+                      <option value="cargado">Cargado</option>
+                      <option value="calificado">Calificado</option>
+                    </select>
+                  </div>
                   <div className="field">
                     <label>Materia</label>
                     <input

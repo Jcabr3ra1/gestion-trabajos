@@ -15,6 +15,7 @@ export interface Materia {
   estado: EstadoTrabajo
   tutor?: string
   cargadoEn?: string
+  preinscritoEn?: string
 }
 
 export interface Cliente {

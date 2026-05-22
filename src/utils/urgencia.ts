@@ -133,22 +133,18 @@ export interface AtencionResumen {
   vencidas: ItemAtencion[]
   proximas: ItemAtencion[]
   revisar:  ItemAtencion[]
-}
-
-export interface ItemPreinscrito {
-  cliente: Cliente
-  detalle: string
-  dias: number
+  preinscritas: ItemAtencion[]
 }
 
 export function getAtencion(clientes: Cliente[]): AtencionResumen {
   const vencidas: ItemAtencion[] = []
   const proximas: ItemAtencion[] = []
   const revisar:  ItemAtencion[] = []
+  const preinscritas: ItemAtencion[] = []
 
   for (const c of clientes) {
     if (c.archivado) continue
-    for (const m of c.materias) {
+    for (const m of c.materias ?? []) {
       if (m.estado === 'pendiente') {
         const dias = diasHasta(m.fechaCierre)
         if (dias < 0) {
@@ -162,6 +158,11 @@ export function getAtencion(clientes: Cliente[]): AtencionResumen {
         if (d >= 3) {
           revisar.push({ cliente: c, materia: m, detalle: m.cargadoEn ? `Cargado hace ${d} día${d !== 1 ? 's' : ''}` : 'Cargado (revisar)', dias: d })
         }
+      } else if (m.estado === 'preinscrito') {
+        const d = m.preinscritoEn ? diasDesde(m.preinscritoEn) : 0
+        if (d >= 2) {
+          preinscritas.push({ cliente: c, materia: m, detalle: `Preinscrita hace ${d} día${d !== 1 ? 's' : ''} — verificar si el curso está activo`, dias: d })
+        }
       }
     }
   }
@@ -169,26 +170,9 @@ export function getAtencion(clientes: Cliente[]): AtencionResumen {
   vencidas.sort((a, b) => b.dias - a.dias)
   proximas.sort((a, b) => a.dias - b.dias)
   revisar.sort((a, b) => b.dias - a.dias)
+  preinscritas.sort((a, b) => b.dias - a.dias)
 
-  return { vencidas, proximas, revisar }
-}
-
-export function getPreinscritosRevision(clientes: Cliente[]): ItemPreinscrito[] {
-  const items: ItemPreinscrito[] = []
-  for (const c of clientes) {
-    if (c.archivado) continue
-    if (c.estadoGeneral !== 'preinscrito') continue
-    const dias = c.preinscritoEn ? diasDesde(c.preinscritoEn) : 0
-    if (dias >= 2) {
-      items.push({
-        cliente: c,
-        detalle: `Preinscrito hace ${dias} día${dias !== 1 ? 's' : ''} — verificar si el curso está activo`,
-        dias,
-      })
-    }
-  }
-  items.sort((a, b) => b.dias - a.dias)
-  return items
+  return { vencidas, proximas, revisar, preinscritas }
 }
 
 export function formatVistoHace(actualizadoEn?: string, creadoEn?: string): string | null {

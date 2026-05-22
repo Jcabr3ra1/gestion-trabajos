@@ -6,7 +6,7 @@ import {
   importarCredenciales, marcarReciente, calificarTodoMaterias, resetearTodoMaterias,
 } from '../utils/storage'
 import { exportarCredenciales, parsearExcelCredenciales, descargarPlantilla } from '../utils/excel'
-import { urgenciaCliente, getAtencion, getPreinscritosRevision } from '../utils/urgencia'
+import { urgenciaCliente, getAtencion } from '../utils/urgencia'
 import ClienteTabla from '../components/ClienteTabla'
 
 interface Props {
@@ -58,8 +58,7 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
   })
 
   const atencion = getAtencion(clientes)
-  const preinscritos = getPreinscritosRevision(clientes)
-  const totalAtencion = atencion.vencidas.length + atencion.proximas.length + atencion.revisar.length + preinscritos.length
+  const totalAtencion = atencion.vencidas.length + atencion.proximas.length + atencion.revisar.length + atencion.preinscritas.length
   const hayActivos = clientes.some(c => !c.archivado)
 
   const activos = ordenados.filter(c => !c.archivado)
@@ -258,22 +257,23 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
             </div>
           )}
 
-          {preinscritos.length > 0 && (
+          {atencion.preinscritas.length > 0 && (
             <div className="atencion-grupo atencion-grupo--preinscrito">
               <div className="atencion-grupo-header">
-                📝 Preinscritos por activar <span className="atencion-grupo-count">({preinscritos.length})</span>
+                📝 Preinscritos por activar <span className="atencion-grupo-count">({atencion.preinscritas.length})</span>
               </div>
               <ul className="atencion-lista">
-                {preinscritos.slice(0, 5).map(it => (
-                  <li key={it.cliente.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
+                {atencion.preinscritas.slice(0, 5).map(it => (
+                  <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
                     <div className="atencion-item-main">
                       <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
+                      <span className="atencion-mat">{it.materia.nombre}</span>
                     </div>
                     <span className="atencion-det atencion-det--preinscrito">{it.detalle}</span>
                   </li>
                 ))}
-                {preinscritos.length > 5 && (
-                  <li className="atencion-mas">y {preinscritos.length - 5} más…</li>
+                {atencion.preinscritas.length > 5 && (
+                  <li className="atencion-mas">y {atencion.preinscritas.length - 5} más…</li>
                 )}
               </ul>
             </div>
