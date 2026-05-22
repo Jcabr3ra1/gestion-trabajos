@@ -167,16 +167,6 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
                 </div>
                 {errores.contrasena && <span className="field-err">{errores.contrasena}</span>}
               </div>
-              <div className="field field--full">
-                <label>Estado del estudiante <span className="field-opt">opcional</span></label>
-                <select
-                  value={form.estadoGeneral}
-                  onChange={e => setField('estadoGeneral', e.target.value as EstadoGeneral)}
-                >
-                  <option value="activo">Activo</option>
-                  <option value="preinscrito">Preinscrito</option>
-                </select>
-              </div>
             </div>
           </div>
 
@@ -193,6 +183,17 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
               <datalist id="materias-sugeridas">
                 {sugerencias.map(s => <option key={s} value={s} />)}
               </datalist>
+
+              <div className="field field--full" style={{ marginBottom: 14, maxWidth: 320 }}>
+                <label>Estado del estudiante <span className="field-opt">opcional</span></label>
+                <select
+                  value={form.estadoGeneral}
+                  onChange={e => setField('estadoGeneral', e.target.value as EstadoGeneral)}
+                >
+                  <option value="activo">Activo</option>
+                  <option value="preinscrito">Preinscrito</option>
+                </select>
+              </div>
 
               {form.materias.length === 0 && (
                 <p className="otras-empty">Sin materias. Usá el botón <strong>＋ Agregar materia</strong> arriba.</p>
