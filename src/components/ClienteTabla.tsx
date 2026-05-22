@@ -171,7 +171,7 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onCalificarTo
                         {unica.estado === 'pendiente' ? '⬆ Cargar' : '✓ Calificar'}
                       </button>
                     )}
-                    {!listo && c.materias.length > 0 && !c.archivado && (
+                    {!listo && !c.archivado && (
                       <button
                         className="action-btn action-btn--calificar-todo"
                         onClick={() => onCalificarTodo(c.id)}

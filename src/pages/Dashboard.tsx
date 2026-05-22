@@ -96,7 +96,11 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
 
   const handleCalificarTodo = async (clienteId: string) => {
     const cliente = clientes.find(c => c.id === clienteId)
-    if (!cliente || cliente.materias.length === 0) return
+    if (!cliente) return
+    if (cliente.materias.length === 0) {
+      mostrarToast('err', 'Este estudiante no tiene materias registradas')
+      return
+    }
     if (!window.confirm('¿Marcar TODAS las materias de este estudiante como calificadas?')) return
     await calificarTodoMaterias(clienteId, cliente.materias, tablaId)
   }
