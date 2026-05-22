@@ -3,7 +3,7 @@ import type { Cliente } from '../types'
 import {
   suscribirClientes, eliminarCliente,
   avanzarEstadoMateria, archivarCliente, desarchivarCliente,
-  importarCredenciales, marcarReciente,
+  importarCredenciales, marcarReciente, calificarTodoMaterias,
 } from '../utils/storage'
 import { exportarCredenciales, parsearExcelCredenciales, descargarPlantilla } from '../utils/excel'
 import { urgenciaCliente, getAtencion } from '../utils/urgencia'
@@ -92,6 +92,13 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
     const cliente = clientes.find(c => c.id === clienteId)
     if (!cliente) return
     await avanzarEstadoMateria(clienteId, materiaId, cliente.materias, tablaId)
+  }
+
+  const handleCalificarTodo = async (clienteId: string) => {
+    const cliente = clientes.find(c => c.id === clienteId)
+    if (!cliente || cliente.materias.length === 0) return
+    if (!window.confirm('¿Marcar TODAS las materias de este estudiante como calificadas?')) return
+    await calificarTodoMaterias(clienteId, cliente.materias, tablaId)
   }
 
   const handleEliminar = async (id: string) => {
@@ -341,6 +348,7 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
           <ClienteTabla
             clientes={filtrados}
             onAvanzarMateria={handleAvanzar}
+            onCalificarTodo={handleCalificarTodo}
             onEditar={onEditar}
             onEliminar={handleEliminar}
             onArchivar={handleArchivar}

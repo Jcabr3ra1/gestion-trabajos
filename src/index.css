@@ -1469,3 +1469,25 @@ input, textarea, select { font: inherit; }
   color: var(--slate-500);
 }
 .dark .tabla-card-del:hover { background: rgba(220,38,38,0.18); color: #fca5a5; border-color: rgba(220,38,38,0.3); }
+
+/* ═══════════════════════════════════════════════════════════
+   BOTÓN CALIFICAR TODO
+   ═══════════════════════════════════════════════════════════ */
+.action-btn--calificar-todo {
+  background: var(--green-50);
+  color: var(--green-800);
+  border: 1px solid var(--green-100);
+  font-weight: 700;
+}
+.action-btn--calificar-todo:hover {
+  background: var(--green-100);
+  border-color: var(--green-500);
+}
+.dark .action-btn--calificar-todo {
+  background: rgba(34,197,94,0.18);
+  color: #86efac;
+  border-color: rgba(34,197,94,0.3);
+}
+.dark .action-btn--calificar-todo:hover {
+  background: rgba(34,197,94,0.28);
+}

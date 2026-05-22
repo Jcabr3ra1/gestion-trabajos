@@ -103,6 +103,19 @@ export async function desarchivarCliente(id: string, tablaId?: string): Promise<
   await updateDoc(clienteDoc(id, tablaId), { archivado: false, actualizadoEn: ahora() })
 }
 
+export async function calificarTodoMaterias(
+  clienteId: string,
+  materias: Materia[],
+  tablaId?: string
+): Promise<void> {
+  const ts = ahora()
+  const actualizadas = materias.map(m => ({
+    ...m,
+    estado: 'calificado' as EstadoTrabajo,
+  }))
+  await updateDoc(clienteDoc(clienteId, tablaId), { materias: actualizadas, actualizadoEn: ts })
+}
+
 export function nuevaMateria(nombre: string, fechaCierre: string, tutor: string = ''): Materia {
   return { id: crypto.randomUUID(), nombre, fechaCierre, estado: 'pendiente', tutor }
 }

@@ -5,6 +5,7 @@ import { urgenciaCliente, unicaMateriaAccionable, formatVistoHace } from '../uti
 interface Props {
   clientes: Cliente[]
   onAvanzarMateria: (clienteId: string, materiaId: string) => void
+  onCalificarTodo: (clienteId: string) => void
   onEditar: (cliente: Cliente) => void
   onEliminar: (id: string) => void
   onArchivar: (id: string) => void
@@ -72,7 +73,7 @@ function formatFecha(iso: string) {
   })
 }
 
-export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onEliminar, onArchivar, onDesarchivar, onInteraccion, onCopiar, destinoId, onLlegada }: Props) {
+export default function ClienteTabla({ clientes, onAvanzarMateria, onCalificarTodo, onEditar, onEliminar, onArchivar, onDesarchivar, onInteraccion, onCopiar, destinoId, onLlegada }: Props) {
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set())
   const [resaltado, setResaltado] = useState<string | null>(null)
 
@@ -168,6 +169,15 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                         title={unica.estado === 'pendiente' ? 'Marcar como cargado' : 'Marcar como calificado'}
                       >
                         {unica.estado === 'pendiente' ? '⬆ Cargar' : '✓ Calificar'}
+                      </button>
+                    )}
+                    {!listo && c.materias.length > 0 && !c.archivado && (
+                      <button
+                        className="action-btn action-btn--calificar-todo"
+                        onClick={() => onCalificarTodo(c.id)}
+                        title="Marcar todas las materias como calificadas"
+                      >
+                        ✓ Calificar todo
                       </button>
                     )}
                     <button className="action-btn action-btn--edit" onClick={() => onEditar(c)}>✏ Editar</button>
