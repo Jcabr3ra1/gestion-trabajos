@@ -483,6 +483,12 @@ input, textarea, select { font: inherit; }
 .tr-main--open { background: var(--green-50) !important; }
 .tr-main--open:hover { background: var(--green-50) !important; }
 
+/* Fila completa calificada */
+.tr-urg--completo { background: #f0fdf4; }
+.tr-urg--completo:hover { background: #dcfce7 !important; }
+.dark .tr-urg--completo { background: rgba(34,197,94,0.06); }
+.dark .tr-urg--completo:hover { background: rgba(34,197,94,0.1) !important; }
+
 .tr-sub { background: #fafffe; border-bottom: 1px solid #e8f5ee !important; }
 .tr-sub:last-child { border-bottom: 1px solid var(--slate-200) !important; }
 .tr-sub:hover { background: #f0faf5 !important; }
