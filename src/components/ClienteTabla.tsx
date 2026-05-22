@@ -55,10 +55,11 @@ function RevisarBadge({ estado, cargadoEn }: { estado: EstadoTrabajo; cargadoEn?
 }
 
 const ESTADO_CONFIG: Record<EstadoReal, { label: string; clase: string; siguiente: string }> = {
-  pendiente:  { label: 'Pendiente',  clase: 'badge--pendiente',  siguiente: '→ Marcar cargado' },
-  cargado:    { label: 'Cargado',    clase: 'badge--cargado',    siguiente: '→ Marcar calificado' },
-  calificado: { label: 'Calificado', clase: 'badge--calificado', siguiente: '↺ Resetear' },
-  vencido:    { label: 'Vencido',    clase: 'badge--vencido',    siguiente: '→ Marcar cargado' },
+  preinscrito: { label: 'Preinscrito', clase: 'badge--preinscrito', siguiente: '→ Marcar pendiente' },
+  pendiente:   { label: 'Pendiente',   clase: 'badge--pendiente',   siguiente: '→ Marcar cargado' },
+  cargado:     { label: 'Cargado',     clase: 'badge--cargado',     siguiente: '→ Marcar calificado' },
+  calificado:  { label: 'Calificado',  clase: 'badge--calificado',  siguiente: '↺ Resetear' },
+  vencido:     { label: 'Vencido',     clase: 'badge--vencido',     siguiente: '→ Marcar cargado' },
 }
 
 function todasCalificadas(c: Cliente): boolean {
@@ -78,25 +79,16 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
   const toggle = (id: string) => {
     let abriendo = false
     setExpandidos(prev => {
-      const s = new Set(prev)
-      if (s.has(id)) {
-        s.delete(id)
-      } else {
-        s.add(id)
-        abriendo = true
-      }
-      return s
+      if (prev.has(id)) return new Set<string>()
+      abriendo = true
+      return new Set<string>([id])
     })
     if (abriendo) onInteraccion(id)
   }
 
   useEffect(() => {
     if (!destinoId) return
-    setExpandidos(prev => {
-      const s = new Set(prev)
-      s.add(destinoId)
-      return s
-    })
+    setExpandidos(new Set<string>([destinoId]))
     setResaltado(destinoId)
     requestAnimationFrame(() => {
       const el = document.getElementById(`cliente-${destinoId}`)
@@ -213,8 +205,14 @@ export default function ClienteTabla({ clientes, onAvanzarMateria, onEditar, onE
                         {m.tutor && <div className="td-materia-tutor">👤 {m.tutor}</div>}
                       </td>
                       <td className="td-fecha">
-                        <div>{formatFecha(m.fechaCierre)}</div>
-                        <Countdown fechaCierre={m.fechaCierre} estado={m.estado} />
+                        {m.fechaCierre ? (
+                          <>
+                            <div>{formatFecha(m.fechaCierre)}</div>
+                            <Countdown fechaCierre={m.fechaCierre} estado={m.estado} />
+                          </>
+                        ) : (
+                          <span className="td-empty">Sin fecha</span>
+                        )}
                         <RevisarBadge estado={m.estado} cargadoEn={m.cargadoEn} />
                       </td>
                       <td colSpan={3}>

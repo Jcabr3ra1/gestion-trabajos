@@ -10,6 +10,7 @@ import { urgenciaCliente, getAtencion } from '../utils/urgencia'
 import ClienteTabla from '../components/ClienteTabla'
 
 interface Props {
+  tablaId: string
   onAgregar: () => void
   onEditar: (cliente: Cliente) => void
 }
@@ -19,7 +20,7 @@ type Filtro = 'activos' | 'vencidos' | 'cargados' | 'calificados' | 'archivados'
 const HOY = new Date()
 HOY.setHours(0, 0, 0, 0)
 
-export default function Dashboard({ onAgregar, onEditar }: Props) {
+export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [cargando, setCargando] = useState(true)
   const [busqueda, setBusqueda] = useState('')
@@ -37,12 +38,13 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
   }
 
   useEffect(() => {
+    setCargando(true)
     const unsub = suscribirClientes(data => {
       setClientes(data)
       setCargando(false)
-    })
+    }, tablaId)
     return unsub
-  }, [])
+  }, [tablaId])
 
   // ordenar por urgencia (vencidas > urgentes > revisar > normal > completo)
   // empate: por interacción más reciente
@@ -89,17 +91,17 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
   const handleAvanzar = async (clienteId: string, materiaId: string) => {
     const cliente = clientes.find(c => c.id === clienteId)
     if (!cliente) return
-    await avanzarEstadoMateria(clienteId, materiaId, cliente.materias)
+    await avanzarEstadoMateria(clienteId, materiaId, cliente.materias, tablaId)
   }
 
   const handleEliminar = async (id: string) => {
     if (!window.confirm('¿Eliminar este estudiante y todas sus materias?')) return
-    await eliminarCliente(id)
+    await eliminarCliente(id, tablaId)
   }
 
-  const handleArchivar   = async (id: string) => { await archivarCliente(id) }
-  const handleDesarchivar = async (id: string) => { await desarchivarCliente(id) }
-  const handleInteraccion = (id: string) => { void marcarReciente(id) }
+  const handleArchivar   = async (id: string) => { await archivarCliente(id, tablaId) }
+  const handleDesarchivar = async (id: string) => { await desarchivarCliente(id, tablaId) }
+  const handleInteraccion = (id: string) => { void marcarReciente(id, tablaId) }
 
   const handleCopiar = async (texto: string, etiqueta: string) => {
     try {
@@ -126,7 +128,7 @@ export default function Dashboard({ onAgregar, onEditar }: Props) {
         mostrarToast('err', 'No se encontraron filas válidas. Verificá las columnas "Usuario" y "Contraseña".')
         return
       }
-      const { actualizados, creados } = await importarCredenciales(pares)
+      const { actualizados, creados } = await importarCredenciales(pares, tablaId)
       const partes: string[] = []
       if (creados > 0)      partes.push(`${creados} creado${creados !== 1 ? 's' : ''}`)
       if (actualizados > 0) partes.push(`${actualizados} actualizado${actualizados !== 1 ? 's' : ''}`)

@@ -99,6 +99,16 @@ export function urgenciaCliente(c: Cliente): InfoUrgencia {
     }
   }
 
+  const preinscritas = c.materias.filter(m => m.estado === 'preinscrito')
+  if (preinscritas.length > 0) {
+    return {
+      nivel: 'normal',
+      score: 20,
+      icono: '📝',
+      texto: preinscritas.length > 1 ? `${preinscritas.length} preinscritas` : 'Preinscrito',
+    }
+  }
+
   return {
     nivel: 'vacio',
     score: 0,

@@ -1,22 +1,39 @@
 import {
   collection, doc, addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, getDocs,
+  onSnapshot, query, getDocs, orderBy, writeBatch,
 } from 'firebase/firestore'
 import { db } from './firebase'
-import type { Cliente, Materia, EstadoTrabajo } from '../types'
+import type { Cliente, Materia, EstadoTrabajo, Tabla } from '../types'
 
 const COL = 'clientes'
+const COL_TABLAS = 'tablas'
 
 const CICLO: Record<EstadoTrabajo, EstadoTrabajo> = {
-  pendiente:  'cargado',
-  cargado:    'calificado',
-  calificado: 'pendiente',
+  preinscrito: 'pendiente',
+  pendiente:   'cargado',
+  cargado:     'calificado',
+  calificado:  'pendiente',
 }
 
 const ahora = () => new Date().toISOString()
 
-export function suscribirClientes(callback: (clientes: Cliente[]) => void) {
-  const q = query(collection(db, COL))
+/* ── helper: colección de clientes según tabla ── */
+function clientesCol(tablaId?: string) {
+  if (tablaId) return collection(db, COL_TABLAS, tablaId, COL)
+  return collection(db, COL)
+}
+
+function clienteDoc(id: string, tablaId?: string) {
+  if (tablaId) return doc(db, COL_TABLAS, tablaId, COL, id)
+  return doc(db, COL, id)
+}
+
+/* ═══════════════════════════════════════════════
+   CLIENTES
+   ═══════════════════════════════════════════════ */
+
+export function suscribirClientes(callback: (clientes: Cliente[]) => void, tablaId?: string) {
+  const q = query(clientesCol(tablaId))
   return onSnapshot(q,
     snapshot => {
       const clientes = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Cliente))
@@ -29,25 +46,38 @@ export function suscribirClientes(callback: (clientes: Cliente[]) => void) {
   )
 }
 
-export async function agregarCliente(data: Omit<Cliente, 'id' | 'creadoEn' | 'archivado'>): Promise<void> {
+export async function agregarCliente(
+  data: Omit<Cliente, 'id' | 'creadoEn' | 'archivado'>,
+  tablaId?: string
+): Promise<void> {
   const ts = ahora()
-  await addDoc(collection(db, COL), {
+  await addDoc(clientesCol(tablaId), {
     ...data,
+    seccion: data.seccion ?? '',
     archivado: false,
     creadoEn: ts,
     actualizadoEn: ts,
   })
 }
 
-export async function actualizarCliente(id: string, cambios: Partial<Omit<Cliente, 'id' | 'creadoEn'>>): Promise<void> {
-  await updateDoc(doc(db, COL, id), { ...cambios, actualizadoEn: ahora() })
+export async function actualizarCliente(
+  id: string,
+  cambios: Partial<Omit<Cliente, 'id' | 'creadoEn'>>,
+  tablaId?: string
+): Promise<void> {
+  await updateDoc(clienteDoc(id, tablaId), { ...cambios, actualizadoEn: ahora() })
 }
 
-export async function eliminarCliente(id: string): Promise<void> {
-  await deleteDoc(doc(db, COL, id))
+export async function eliminarCliente(id: string, tablaId?: string): Promise<void> {
+  await deleteDoc(clienteDoc(id, tablaId))
 }
 
-export async function avanzarEstadoMateria(clienteId: string, materiaId: string, materias: Materia[]): Promise<void> {
+export async function avanzarEstadoMateria(
+  clienteId: string,
+  materiaId: string,
+  materias: Materia[],
+  tablaId?: string
+): Promise<void> {
   const ts = ahora()
   const actualizadas = materias.map(m => {
     if (m.id !== materiaId) return m
@@ -58,27 +88,27 @@ export async function avanzarEstadoMateria(clienteId: string, materiaId: string,
       cargadoEn: nuevoEstado === 'cargado' ? ts : '',
     }
   })
-  await updateDoc(doc(db, COL, clienteId), { materias: actualizadas, actualizadoEn: ts })
+  await updateDoc(clienteDoc(clienteId, tablaId), { materias: actualizadas, actualizadoEn: ts })
 }
 
-export async function marcarReciente(id: string): Promise<void> {
-  await updateDoc(doc(db, COL, id), { actualizadoEn: ahora() })
+export async function marcarReciente(id: string, tablaId?: string): Promise<void> {
+  await updateDoc(clienteDoc(id, tablaId), { actualizadoEn: ahora() })
 }
 
-export async function archivarCliente(id: string): Promise<void> {
-  await updateDoc(doc(db, COL, id), { archivado: true, actualizadoEn: ahora() })
+export async function archivarCliente(id: string, tablaId?: string): Promise<void> {
+  await updateDoc(clienteDoc(id, tablaId), { archivado: true, actualizadoEn: ahora() })
 }
 
-export async function desarchivarCliente(id: string): Promise<void> {
-  await updateDoc(doc(db, COL, id), { archivado: false, actualizadoEn: ahora() })
+export async function desarchivarCliente(id: string, tablaId?: string): Promise<void> {
+  await updateDoc(clienteDoc(id, tablaId), { archivado: false, actualizadoEn: ahora() })
 }
 
 export function nuevaMateria(nombre: string, fechaCierre: string, tutor: string = ''): Materia {
   return { id: crypto.randomUUID(), nombre, fechaCierre, estado: 'pendiente', tutor }
 }
 
-export async function getMateriasSugeridas(limite = 20): Promise<string[]> {
-  const snap = await getDocs(collection(db, COL))
+export async function getMateriasSugeridas(limite = 20, tablaId?: string): Promise<string[]> {
+  const snap = await getDocs(clientesCol(tablaId))
   const counts = new Map<string, number>()
   for (const d of snap.docs) {
     const c = d.data() as Cliente
@@ -100,9 +130,10 @@ export interface ResultadoImport {
 }
 
 export async function importarCredenciales(
-  pares: { usuario: string; contrasena: string }[]
+  pares: { usuario: string; contrasena: string }[],
+  tablaId?: string
 ): Promise<ResultadoImport> {
-  const snap = await getDocs(collection(db, COL))
+  const snap = await getDocs(clientesCol(tablaId))
   const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Cliente))
 
   let actualizados = 0
@@ -114,15 +145,16 @@ export async function importarCredenciales(
     )
     const ts = ahora()
     if (encontrado) {
-      await updateDoc(doc(db, COL, encontrado.id), { contrasena, actualizadoEn: ts })
+      await updateDoc(clienteDoc(encontrado.id, tablaId), { contrasena, actualizadoEn: ts })
       actualizados++
     } else {
-      await addDoc(collection(db, COL), {
+      await addDoc(clientesCol(tablaId), {
         nombre: usuario,
         usuario,
         contrasena,
         tutor: '',
         materias: [],
+        seccion: '',
         archivado: false,
         creadoEn: ts,
         actualizadoEn: ts,
@@ -132,4 +164,47 @@ export async function importarCredenciales(
   }
 
   return { actualizados, creados }
+}
+
+/* ═══════════════════════════════════════════════
+   TABLAS
+   ═══════════════════════════════════════════════ */
+
+export function suscribirTablas(callback: (tablas: Tabla[]) => void) {
+  const q = query(collection(db, COL_TABLAS), orderBy('creadoEn', 'desc'))
+  return onSnapshot(q,
+    snapshot => {
+      const tablas = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Tabla))
+      callback(tablas)
+    },
+    error => {
+      console.error('Firestore tablas:', error)
+      callback([])
+    }
+  )
+}
+
+export async function agregarTabla(nombre: string): Promise<void> {
+  await addDoc(collection(db, COL_TABLAS), {
+    nombre,
+    creadoEn: ahora(),
+  })
+}
+
+export async function eliminarTabla(id: string): Promise<void> {
+  // primero borrar todos los clientes de la subcolección
+  const snap = await getDocs(collection(db, COL_TABLAS, id, COL))
+  const batch = writeBatch(db)
+  let count = 0
+  for (const d of snap.docs) {
+    batch.delete(d.ref)
+    count++
+    if (count >= 400) {
+      await batch.commit()
+      count = 0
+    }
+  }
+  if (count > 0) await batch.commit()
+  // luego borrar la tabla
+  await deleteDoc(doc(db, COL_TABLAS, id))
 }

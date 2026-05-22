@@ -4,6 +4,7 @@ import { agregarCliente, actualizarCliente, getMateriasSugeridas } from '../util
 
 interface Props {
   clienteEditar?: Cliente | null
+  tablaId: string
   onGuardado: () => void
   onCancelar: () => void
 }
@@ -37,7 +38,7 @@ function materiasIniciales(materias: Materia[]): MateriaForm[] {
 
 const VACIO: FormData = { nombre: '', usuario: '', contrasena: '', materias: [] }
 
-export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: Props) {
+export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCancelar }: Props) {
   const editando = !!clienteEditar
   const [form, setForm] = useState<FormData>(() =>
     editando
@@ -55,9 +56,9 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
 
   useEffect(() => {
     if (editando) {
-      getMateriasSugeridas().then(setSugerencias).catch(() => setSugerencias([]))
+      getMateriasSugeridas(20, tablaId).then(setSugerencias).catch(() => setSugerencias([]))
     }
-  }, [editando])
+  }, [editando, tablaId])
 
   const setField = (campo: 'nombre' | 'usuario' | 'contrasena', valor: string) => {
     setForm(prev => ({ ...prev, [campo]: valor }))
@@ -88,7 +89,7 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
     if (editando) {
       form.materias.forEach((m, i) => {
         if (!m.nombre.trim()) e[`mat_${i}_nombre`] = 'Requerido'
-        if (!m.fechaCierre)   e[`mat_${i}_fechaCierre`] = 'Requerido'
+        if (m.estado !== 'preinscrito' && !m.fechaCierre) e[`mat_${i}_fechaCierre`] = 'Requerido'
       })
     }
     setErrores(e)
@@ -112,13 +113,14 @@ export default function ClienteForm({ clienteEditar, onGuardado, onCancelar }: P
       nombre: form.nombre,
       usuario: form.usuario,
       contrasena: form.contrasena,
+      seccion: '',
       tutor: '',
       materias: editando ? construirMaterias() : [],
     }
     if (editando) {
-      await actualizarCliente(clienteEditar!.id, data)
+      await actualizarCliente(clienteEditar!.id, data, tablaId)
     } else {
-      await agregarCliente(data)
+      await agregarCliente(data, tablaId)
     }
     onGuardado()
   }
