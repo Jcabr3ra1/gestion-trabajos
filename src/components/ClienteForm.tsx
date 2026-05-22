@@ -145,7 +145,21 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
     <div className="form-page">
       <div className="form-card">
         <div className="form-card-header">
-          <span className="form-card-icon">{editando ? '✏' : '＋'}</span>
+          {editando ? (
+            <span className="form-card-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 22, height: 22, color: 'var(--brand-primary)' }}>
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </span>
+          ) : (
+            <span className="form-card-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 22, height: 22, color: 'var(--brand-primary)' }}>
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </span>
+          )}
           <div>
             <h2 className="form-card-title">{editando ? 'Editar estudiante' : 'Nuevo estudiante'}</h2>
             <p className="form-card-sub">{editando ? 'Modifica los datos del estudiante' : 'Registra los datos de acceso a la plataforma'}</p>
@@ -174,8 +188,24 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
                     onChange={e => setField('contrasena', e.target.value)}
                     className={errores.contrasena ? 'field-input--err' : ''}
                     placeholder="Contraseña del estudiante" />
-                  <button type="button" className="pass-toggle" onClick={() => setVerClave(v => !v)}>
-                    {verClave ? '🙈 Ocultar' : '👁 Ver'}
+                  <button type="button" className="pass-toggle" onClick={() => setVerClave(v => !v)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    {verClave ? (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                        Ocultar
+                      </>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        Ver
+                      </>
+                    )}
                   </button>
                 </div>
                 {errores.contrasena && <span className="field-err">{errores.contrasena}</span>}
@@ -187,7 +217,13 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
             <div className="form-section">
               <div className="materias-header">
                 <h3 className="form-section-title">Materias</h3>
-                <button type="button" className="btn-agregar-otra" onClick={agregarMat}>＋ Agregar materia</button>
+                <button type="button" className="btn-agregar-otra" onClick={agregarMat} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12 }}>
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Agregar materia
+                </button>
               </div>
               <p className="form-section-hint">
                 Escribí el nombre de la materia. {sugerencias.length > 0 && 'Las más usadas aparecen como sugerencia al escribir.'}
@@ -212,7 +248,7 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
                       style={{ width: 18, height: 18, accentColor: 'var(--green-600)', cursor: 'pointer' }}
                     />
                     <label htmlFor={`preinscrito-${m.id}`} style={{ fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                      {m.estado === 'preinscrito' ? '✓ Preinscrito' : '✔ Preinscrito'}
+                      Preinscrito
                     </label>
                   </div>
                   <div className="field">
@@ -238,7 +274,12 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
                     <input type="text" value={m.tutor} onChange={e => setMat(i, 'tutor', e.target.value)}
                       placeholder="Ej: Prof. Ramírez" />
                   </div>
-                  <button type="button" className="btn-quitar" onClick={() => quitarMat(i)} title="Quitar materia">✕</button>
+                  <button type="button" className="btn-quitar" onClick={() => quitarMat(i)} title="Quitar materia" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  </button>
                 </div>
               ))}
             </div>
@@ -246,8 +287,22 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
 
           <div className="form-footer">
             <button type="button" className="btn-cancel" onClick={onCancelar}>Cancelar</button>
-            <button type="submit" className="btn-save">
-              {editando ? '✔ Guardar cambios' : '→ Registrar estudiante'}
+            <button type="submit" className="btn-save" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              {editando ? (
+                <>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Guardar cambios
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                  Registrar estudiante
+                </>
+              )}
             </button>
           </div>
         </form>

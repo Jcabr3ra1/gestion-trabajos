@@ -186,102 +186,118 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
       {totalAtencion > 0 ? (
         <div className="atencion">
           <div className="atencion-header">
-            <span className="atencion-icon">📌</span>
+            <span className="atencion-title-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20, color: 'var(--brand-primary)' }}>
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            </span>
             <h2 className="atencion-title">Atención hoy</h2>
             <span className="atencion-count">{totalAtencion}</span>
           </div>
 
-          {atencion.vencidas.length > 0 && (
-            <div className="atencion-grupo atencion-grupo--vencida">
-              <div className="atencion-grupo-header">
-                🔴 Vencidas <span className="atencion-grupo-count">({atencion.vencidas.length})</span>
+          <div className="atencion-grid">
+            {atencion.vencidas.length > 0 && (
+              <div className="atencion-grupo atencion-grupo--vencida">
+                <div className="atencion-grupo-header">
+                  <span className="atencion-dot atencion-dot--vencida" />
+                  Vencidas <span className="atencion-grupo-count">({atencion.vencidas.length})</span>
+                </div>
+                <ul className="atencion-lista">
+                  {atencion.vencidas.slice(0, 5).map(it => (
+                    <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
+                      <div className="atencion-item-main">
+                        <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
+                        <span className="atencion-mat">{it.materia.nombre}</span>
+                      </div>
+                      <span className="atencion-det atencion-det--vencida">{it.detalle}</span>
+                    </li>
+                  ))}
+                  {atencion.vencidas.length > 5 && (
+                    <li className="atencion-mas">y {atencion.vencidas.length - 5} más…</li>
+                  )}
+                </ul>
               </div>
-              <ul className="atencion-lista">
-                {atencion.vencidas.slice(0, 5).map(it => (
-                  <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
-                    <div className="atencion-item-main">
-                      <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
-                      <span className="atencion-mat">{it.materia.nombre}</span>
-                    </div>
-                    <span className="atencion-det atencion-det--vencida">{it.detalle}</span>
-                  </li>
-                ))}
-                {atencion.vencidas.length > 5 && (
-                  <li className="atencion-mas">y {atencion.vencidas.length - 5} más…</li>
-                )}
-              </ul>
-            </div>
-          )}
+            )}
 
-          {atencion.proximas.length > 0 && (
-            <div className="atencion-grupo atencion-grupo--urgente">
-              <div className="atencion-grupo-header">
-                ⚠ Por vencer <span className="atencion-grupo-count">({atencion.proximas.length})</span>
+            {atencion.proximas.length > 0 && (
+              <div className="atencion-grupo atencion-grupo--urgente">
+                <div className="atencion-grupo-header">
+                  <span className="atencion-dot atencion-dot--urgente" />
+                  Por vencer <span className="atencion-grupo-count">({atencion.proximas.length})</span>
+                </div>
+                <ul className="atencion-lista">
+                  {atencion.proximas.slice(0, 5).map(it => (
+                    <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
+                      <div className="atencion-item-main">
+                        <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
+                        <span className="atencion-mat">{it.materia.nombre}</span>
+                      </div>
+                      <span className="atencion-det atencion-det--urgente">{it.detalle}</span>
+                    </li>
+                  ))}
+                  {atencion.proximas.length > 5 && (
+                    <li className="atencion-mas">y {atencion.proximas.length - 5} más…</li>
+                  )}
+                </ul>
               </div>
-              <ul className="atencion-lista">
-                {atencion.proximas.slice(0, 5).map(it => (
-                  <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
-                    <div className="atencion-item-main">
-                      <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
-                      <span className="atencion-mat">{it.materia.nombre}</span>
-                    </div>
-                    <span className="atencion-det atencion-det--urgente">{it.detalle}</span>
-                  </li>
-                ))}
-                {atencion.proximas.length > 5 && (
-                  <li className="atencion-mas">y {atencion.proximas.length - 5} más…</li>
-                )}
-              </ul>
-            </div>
-          )}
+            )}
 
-          {atencion.revisar.length > 0 && (
-            <div className="atencion-grupo atencion-grupo--revisar">
-              <div className="atencion-grupo-header">
-                👀 Revisar si calificaron <span className="atencion-grupo-count">({atencion.revisar.length})</span>
+            {atencion.revisar.length > 0 && (
+              <div className="atencion-grupo atencion-grupo--revisar">
+                <div className="atencion-grupo-header">
+                  <span className="atencion-dot atencion-dot--revisar" />
+                  Revisar si calificaron <span className="atencion-grupo-count">({atencion.revisar.length})</span>
+                </div>
+                <ul className="atencion-lista">
+                  {atencion.revisar.slice(0, 5).map(it => (
+                    <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
+                      <div className="atencion-item-main">
+                        <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
+                        <span className="atencion-mat">{it.materia.nombre}</span>
+                      </div>
+                      <span className="atencion-det atencion-det--revisar">{it.detalle}</span>
+                    </li>
+                  ))}
+                  {atencion.revisar.length > 5 && (
+                    <li className="atencion-mas">y {atencion.revisar.length - 5} más…</li>
+                  )}
+                </ul>
               </div>
-              <ul className="atencion-lista">
-                {atencion.revisar.slice(0, 5).map(it => (
-                  <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
-                    <div className="atencion-item-main">
-                      <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
-                      <span className="atencion-mat">{it.materia.nombre}</span>
-                    </div>
-                    <span className="atencion-det atencion-det--revisar">{it.detalle}</span>
-                  </li>
-                ))}
-                {atencion.revisar.length > 5 && (
-                  <li className="atencion-mas">y {atencion.revisar.length - 5} más…</li>
-                )}
-              </ul>
-            </div>
-          )}
+            )}
 
-          {atencion.preinscritas.length > 0 && (
-            <div className="atencion-grupo atencion-grupo--preinscrito">
-              <div className="atencion-grupo-header">
-                📝 Preinscritos por activar <span className="atencion-grupo-count">({atencion.preinscritas.length})</span>
+            {atencion.preinscritas.length > 0 && (
+              <div className="atencion-grupo atencion-grupo--preinscrito">
+                <div className="atencion-grupo-header">
+                  <span className="atencion-dot atencion-dot--preinscrito" />
+                  Preinscritos por activar <span className="atencion-grupo-count">({atencion.preinscritas.length})</span>
+                </div>
+                <ul className="atencion-lista">
+                  {atencion.preinscritas.slice(0, 5).map(it => (
+                    <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
+                      <div className="atencion-item-main">
+                        <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
+                        <span className="atencion-mat">{it.materia.nombre}</span>
+                      </div>
+                      <span className="atencion-det atencion-det--preinscrito">{it.detalle}</span>
+                    </li>
+                  ))}
+                  {atencion.preinscritas.length > 5 && (
+                    <li className="atencion-mas">y {atencion.preinscritas.length - 5} más…</li>
+                  )}
+                </ul>
               </div>
-              <ul className="atencion-lista">
-                {atencion.preinscritas.slice(0, 5).map(it => (
-                  <li key={it.materia.id} className="atencion-item" onClick={() => irACliente(it.cliente.id)}>
-                    <div className="atencion-item-main">
-                      <span className="atencion-est">{it.cliente.nombre || it.cliente.usuario}</span>
-                      <span className="atencion-mat">{it.materia.nombre}</span>
-                    </div>
-                    <span className="atencion-det atencion-det--preinscrito">{it.detalle}</span>
-                  </li>
-                ))}
-                {atencion.preinscritas.length > 5 && (
-                  <li className="atencion-mas">y {atencion.preinscritas.length - 5} más…</li>
-                )}
-              </ul>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       ) : hayActivos && (
         <div className="todo-al-dia">
-          <span className="todo-al-dia-icon">🎉</span>
+          <span className="todo-al-dia-icon" style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--brand-primary)' }}>
+            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 32, height: 32 }}>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </span>
           <div>
             <h2 className="todo-al-dia-title">Todo al día</h2>
             <p className="todo-al-dia-sub">No tenés materias vencidas, por vencer ni pendientes de revisar.</p>
@@ -291,35 +307,63 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
 
       <div className="stat-cards">
         <div className="stat-card">
-          <div className="stat-icon stat-icon--blue">👥</div>
+          <div className="stat-icon stat-icon--blue" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
           <div className="stat-info">
             <span className="stat-num">{stats.estudiantes}</span>
             <span className="stat-lbl">Estudiantes</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon stat-icon--gray">○</div>
+          <div className="stat-icon stat-icon--gray" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
           <div className="stat-info">
             <span className="stat-num">{stats.pendientes}</span>
             <span className="stat-lbl">Pendientes</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon stat-icon--blue2">⬆</div>
+          <div className="stat-icon stat-icon--blue2" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
           <div className="stat-info">
             <span className="stat-num">{stats.cargadas}</span>
             <span className="stat-lbl">Cargadas</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon stat-icon--green">✓</div>
+          <div className="stat-icon stat-icon--green" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
           <div className="stat-info">
             <span className="stat-num">{stats.calificadas}</span>
             <span className="stat-lbl">Calificadas</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon stat-icon--red">!</div>
+          <div className="stat-icon stat-icon--red" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
           <div className="stat-info">
             <span className="stat-num stat-num--vencido">{stats.vencidas}</span>
             <span className="stat-lbl">Vencidas</span>
@@ -329,9 +373,20 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
 
       <div className="toolbar">
         <div className="toolbar-left">
-          <button className="btn-nuevo" onClick={onAgregar}>＋ Nuevo estudiante</button>
+          <button className="btn-nuevo" onClick={onAgregar}>
+            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Nuevo estudiante
+          </button>
           <button className="btn-xl btn-xl--export" onClick={handleExportar} title="Exportar usuario y contraseña a Excel">
-            ↓ Exportar Excel
+            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Exportar Excel
           </button>
           <button
             className="btn-xl btn-xl--import"
@@ -339,10 +394,27 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
             disabled={importando}
             title="Importar contraseñas desde Excel"
           >
-            {importando ? 'Importando…' : '↑ Importar Excel'}
+            {importando ? (
+              'Importando…'
+            ) : (
+              <>
+                <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Importar Excel
+              </>
+            )}
           </button>
           <button className="btn-xl btn-xl--template" onClick={descargarPlantilla} title="Descargar plantilla Excel vacía">
-            ▤ Plantilla
+            <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            Plantilla
           </button>
           <input
             ref={inputArchivoRef}
@@ -352,7 +424,12 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
             onChange={handleImportar}
           />
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </span>
             <input
               className="search-input"
               type="search"
@@ -365,10 +442,10 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
         <div className="filtros">
           {([
             ['activos',     'Activos'],
-            ['vencidos',    '⚠ Vencidos'],
-            ['cargados',    '⬆ Cargados'],
-            ['calificados', '✓ Calificados'],
-            ['archivados',  `📁 Archivados${stats.archivados > 0 ? ` (${stats.archivados})` : ''}`],
+            ['vencidos',    'Vencidos'],
+            ['cargados',    'Cargados'],
+            ['calificados', 'Calificados'],
+            ['archivados',  `Archivados${stats.archivados > 0 ? ` (${stats.archivados})` : ''}`],
           ] as [Filtro, string][]).map(([f, label]) => (
             <button
               key={f}
@@ -385,10 +462,36 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
         {filtrados.length === 0 ? (
           <div className="empty-state">
             {activos.length === 0
-              ? <><div className="empty-icon">📋</div><p className="empty-title">Sin estudiantes</p><p className="empty-sub">Haz clic en <strong>＋ Nuevo estudiante</strong> para comenzar.</p></>
+              ? <>
+                  <div className="empty-icon" style={{ color: 'var(--text-muted)' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 48, height: 48 }}>
+                      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                    </svg>
+                  </div>
+                  <p className="empty-title">Sin estudiantes</p>
+                  <p className="empty-sub">Haz clic en <strong>＋ Nuevo estudiante</strong> para comenzar.</p>
+                </>
               : filtro === 'archivados'
-              ? <><div className="empty-icon">📁</div><p className="empty-title">Sin archivados</p><p className="empty-sub">Los estudiantes con todas las materias calificadas aparecerán aquí.</p></>
-              : <><div className="empty-icon">🔍</div><p className="empty-title">Sin resultados</p><p className="empty-sub">No se encontró "<strong>{busqueda}</strong>".</p></>
+              ? <>
+                  <div className="empty-icon" style={{ color: 'var(--text-muted)' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 48, height: 48 }}>
+                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                    </svg>
+                  </div>
+                  <p className="empty-title">Sin archivados</p>
+                  <p className="empty-sub">Los estudiantes con todas las materias calificadas aparecerán aquí.</p>
+                </>
+              : <>
+                  <div className="empty-icon" style={{ color: 'var(--text-muted)' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 48, height: 48 }}>
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                  </div>
+                  <p className="empty-title">Sin resultados</p>
+                  <p className="empty-sub">No se encontró "<strong>{busqueda}</strong>".</p>
+                </>
             }
           </div>
         ) : (
@@ -416,9 +519,26 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
 
       {toast && (
         <div className={`toast toast--${toast.tipo}`}>
-          <span className="toast-icon">{toast.tipo === 'ok' ? '✓' : '⚠'}</span>
+          <span className="toast-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+            {toast.tipo === 'ok' ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            )}
+          </span>
           <span className="toast-msg">{toast.mensaje}</span>
-          <button className="toast-close" onClick={() => setToast(null)}>✕</button>
+          <button className="toast-close" onClick={() => setToast(null)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
       )}
     </div>

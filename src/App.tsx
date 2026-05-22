@@ -79,8 +79,10 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div className="app-header-inner">
-          <span className="app-logo">📋</span>
-          <div>
+          <div className="app-logo-container app-logo-pulse">
+            <span>📋</span>
+          </div>
+          <div className="app-title-group">
             <h1 className="app-title">Gestión de Trabajos</h1>
             <p className="app-subtitle">
               {tablaActiva ? `Tabla: ${tablaActiva.nombre}` : 'Control académico de estudiantes'}
@@ -94,16 +96,40 @@ export default function App() {
             title={tema === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
             aria-label="Cambiar tema"
           >
-            {tema === 'light' ? '🌙' : '☀'}
+            {tema === 'light' ? (
+              <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            ) : (
+              <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            )}
           </button>
           {tablaActiva && vista === 'dashboard' && (
             <button className="xl-btn xl-btn--back" onClick={salirDeTabla}>
-              ← Cambiar tabla
+              <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              Cambiar tabla
             </button>
           )}
           {tablaActiva && vista === 'formulario' && (
             <button className="xl-btn xl-btn--back" onClick={cerrarFormulario}>
-              ← Volver a la tabla
+              <svg className="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              Volver a la tabla
             </button>
           )}
         </div>
