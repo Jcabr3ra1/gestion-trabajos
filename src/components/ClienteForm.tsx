@@ -203,17 +203,17 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
 
               {form.materias.map((m, i) => (
                 <div key={m.id} className="materia-card">
-                  <div className="field" style={{ minWidth: 140 }}>
-                    <label>Estado</label>
-                    <select
-                      value={m.estado}
-                      onChange={e => setMatEstado(i, e.target.value as EstadoTrabajo)}
-                    >
-                      <option value="preinscrito">Preinscrito</option>
-                      <option value="pendiente">Pendiente</option>
-                      <option value="cargado">Cargado</option>
-                      <option value="calificado">Calificado</option>
-                    </select>
+                  <div className="field" style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 'auto' }}>
+                    <input
+                      type="checkbox"
+                      id={`preinscrito-${m.id}`}
+                      checked={m.estado === 'preinscrito'}
+                      onChange={e => setMatEstado(i, e.target.checked ? 'preinscrito' : 'pendiente')}
+                      style={{ width: 18, height: 18, accentColor: 'var(--green-600)', cursor: 'pointer' }}
+                    />
+                    <label htmlFor={`preinscrito-${m.id}`} style={{ fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                      {m.estado === 'preinscrito' ? '✓ Preinscrito' : '✔ Preinscrito'}
+                    </label>
                   </div>
                   <div className="field">
                     <label>Materia</label>
