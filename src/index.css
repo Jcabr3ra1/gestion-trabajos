@@ -1028,6 +1028,9 @@ input, textarea, select { font: inherit; }
 .atencion-grupo--vencida .atencion-grupo-header { color: var(--red-700); }
 .atencion-grupo--urgente .atencion-grupo-header { color: var(--amber-600); }
 .atencion-grupo--revisar .atencion-grupo-header { color: var(--purple-600); }
+.atencion-grupo--preinscrito .atencion-grupo-header { color: var(--blue-600); }
+
+.atencion-det--preinscrito { background: var(--blue-100); color: var(--blue-600); }
 
 .atencion-lista { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
 .atencion-item {

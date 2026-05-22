@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { Cliente, Materia, EstadoTrabajo } from '../types'
+import type { Cliente, Materia, EstadoTrabajo, EstadoGeneral } from '../types'
 import { agregarCliente, actualizarCliente, getMateriasSugeridas } from '../utils/storage'
 
 interface Props {
@@ -22,6 +22,7 @@ interface FormData {
   nombre: string
   usuario: string
   contrasena: string
+  estadoGeneral: EstadoGeneral
   materias: MateriaForm[]
 }
 
@@ -36,7 +37,7 @@ function materiasIniciales(materias: Materia[]): MateriaForm[] {
   }))
 }
 
-const VACIO: FormData = { nombre: '', usuario: '', contrasena: '', materias: [] }
+const VACIO: FormData = { nombre: '', usuario: '', contrasena: '', estadoGeneral: 'activo', materias: [] }
 
 export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCancelar }: Props) {
   const editando = !!clienteEditar
@@ -46,6 +47,7 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
           nombre: clienteEditar!.nombre,
           usuario: clienteEditar!.usuario,
           contrasena: clienteEditar!.contrasena,
+          estadoGeneral: clienteEditar!.estadoGeneral ?? 'activo',
           materias: materiasIniciales(clienteEditar!.materias),
         }
       : VACIO
@@ -60,7 +62,7 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
     }
   }, [editando, tablaId])
 
-  const setField = (campo: 'nombre' | 'usuario' | 'contrasena', valor: string) => {
+  const setField = (campo: 'nombre' | 'usuario' | 'contrasena' | 'estadoGeneral', valor: string) => {
     setForm(prev => ({ ...prev, [campo]: valor }))
     setErrores(prev => ({ ...prev, [campo]: '' }))
   }
@@ -114,6 +116,7 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
       usuario: form.usuario,
       contrasena: form.contrasena,
       seccion: '',
+      estadoGeneral: form.estadoGeneral,
       tutor: '',
       materias: editando ? construirMaterias() : [],
     }
@@ -163,6 +166,16 @@ export default function ClienteForm({ clienteEditar, tablaId, onGuardado, onCanc
                   </button>
                 </div>
                 {errores.contrasena && <span className="field-err">{errores.contrasena}</span>}
+              </div>
+              <div className="field field--full">
+                <label>Estado del estudiante <span className="field-opt">opcional</span></label>
+                <select
+                  value={form.estadoGeneral}
+                  onChange={e => setField('estadoGeneral', e.target.value as EstadoGeneral)}
+                >
+                  <option value="activo">Activo</option>
+                  <option value="preinscrito">Preinscrito</option>
+                </select>
               </div>
             </div>
           </div>

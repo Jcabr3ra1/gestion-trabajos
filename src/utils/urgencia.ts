@@ -135,6 +135,12 @@ export interface AtencionResumen {
   revisar:  ItemAtencion[]
 }
 
+export interface ItemPreinscrito {
+  cliente: Cliente
+  detalle: string
+  dias: number
+}
+
 export function getAtencion(clientes: Cliente[]): AtencionResumen {
   const vencidas: ItemAtencion[] = []
   const proximas: ItemAtencion[] = []
@@ -165,6 +171,24 @@ export function getAtencion(clientes: Cliente[]): AtencionResumen {
   revisar.sort((a, b) => b.dias - a.dias)
 
   return { vencidas, proximas, revisar }
+}
+
+export function getPreinscritosRevision(clientes: Cliente[]): ItemPreinscrito[] {
+  const items: ItemPreinscrito[] = []
+  for (const c of clientes) {
+    if (c.archivado) continue
+    if (c.estadoGeneral !== 'preinscrito') continue
+    const dias = c.preinscritoEn ? diasDesde(c.preinscritoEn) : 0
+    if (dias >= 2) {
+      items.push({
+        cliente: c,
+        detalle: `Preinscrito hace ${dias} día${dias !== 1 ? 's' : ''} — verificar si el curso está activo`,
+        dias,
+      })
+    }
+  }
+  items.sort((a, b) => b.dias - a.dias)
+  return items
 }
 
 export function formatVistoHace(actualizadoEn?: string, creadoEn?: string): string | null {

@@ -54,6 +54,8 @@ export async function agregarCliente(
   await addDoc(clientesCol(tablaId), {
     ...data,
     seccion: data.seccion ?? '',
+    estadoGeneral: data.estadoGeneral ?? 'activo',
+    preinscritoEn: data.estadoGeneral === 'preinscrito' ? ts : '',
     archivado: false,
     creadoEn: ts,
     actualizadoEn: ts,
@@ -130,6 +132,19 @@ export async function resetearTodoMaterias(
   await updateDoc(clienteDoc(clienteId, tablaId), { materias: actualizadas, actualizadoEn: ts })
 }
 
+export async function cambiarEstadoGeneral(
+  clienteId: string,
+  estado: 'preinscrito' | 'activo',
+  tablaId?: string
+): Promise<void> {
+  const ts = ahora()
+  await updateDoc(clienteDoc(clienteId, tablaId), {
+    estadoGeneral: estado,
+    preinscritoEn: estado === 'preinscrito' ? ts : '',
+    actualizadoEn: ts,
+  })
+}
+
 export function nuevaMateria(nombre: string, fechaCierre: string, tutor: string = ''): Materia {
   return { id: crypto.randomUUID(), nombre, fechaCierre, estado: 'pendiente', tutor }
 }
@@ -182,6 +197,7 @@ export async function importarCredenciales(
         tutor: '',
         materias: [],
         seccion: '',
+        estadoGeneral: 'activo',
         archivado: false,
         creadoEn: ts,
         actualizadoEn: ts,
