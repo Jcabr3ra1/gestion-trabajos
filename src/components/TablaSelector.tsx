@@ -30,8 +30,8 @@ export default function TablaSelector({ tablas, onSeleccionar, onAgregar, onElim
           </svg>
         </div>
         <div>
-          <h1 className="tabla-selector-title">Gestión de Trabajos</h1>
-          <p className="tabla-selector-sub">Elegí una tabla para comenzar o creá una nueva</p>
+          <h1 className="tabla-selector-title">Bitácora de Trabajos</h1>
+          <p className="tabla-selector-sub">Organiza tus grupos de trabajo y vuelve rápido a lo importante.</p>
         </div>
       </div>
 
@@ -39,7 +39,7 @@ export default function TablaSelector({ tablas, onSeleccionar, onAgregar, onElim
         <input
           type="text"
           className="tabla-selector-input"
-          placeholder="Nombre de nueva tabla"
+          placeholder="Ej: Mayo - grupo tarde"
           value={nueva}
           onChange={e => setNueva(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleAgregar() }}
@@ -49,7 +49,7 @@ export default function TablaSelector({ tablas, onSeleccionar, onAgregar, onElim
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          Crear tabla
+          Crear bitácora
         </button>
       </div>
 
@@ -60,8 +60,8 @@ export default function TablaSelector({ tablas, onSeleccionar, onAgregar, onElim
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
             </svg>
           </div>
-          <p className="empty-title">Sin tablas</p>
-          <p className="empty-sub">Creá tu primera tabla arriba para empezar a registrar estudiantes.</p>
+          <p className="empty-title">Sin bitácoras</p>
+          <p className="empty-sub">Crea una para empezar a registrar estudiantes, materias y cierres.</p>
         </div>
       ) : (
         <div className="tabla-selector-grid">

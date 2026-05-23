@@ -88,9 +88,9 @@ export default function App() {
             </svg>
           </div>
           <div className="app-title-group">
-            <h1 className="app-title">Gestión de Trabajos</h1>
+            <h1 className="app-title">Bitácora de Trabajos</h1>
             <p className="app-subtitle">
-              {tablaActiva ? `Tabla: ${tablaActiva.nombre}` : 'Control académico de estudiantes'}
+              {tablaActiva ? `Mesa activa: ${tablaActiva.nombre}` : 'Control diario de entregas y constancia'}
             </p>
           </div>
         </div>

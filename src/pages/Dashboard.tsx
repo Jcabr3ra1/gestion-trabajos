@@ -88,6 +88,7 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
 
   const activos = ordenados.filter(c => !c.archivado)
   const todasMaterias = activos.flatMap(c => c.materias)
+  const totalMateriasActivas = todasMaterias.length
 
   const stats = {
     estudiantes: activos.length,
@@ -97,6 +98,50 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
     vencidas:    todasMaterias.filter(m => m.estado === 'pendiente' && new Date(m.fechaCierre + 'T00:00:00') < HOY).length,
     archivados:  ordenados.filter(c => c.archivado).length,
   }
+
+  const progreso = totalMateriasActivas > 0
+    ? Math.round((stats.calificadas / totalMateriasActivas) * 100)
+    : 0
+
+  const pendientesSemana = todasMaterias.filter(m => {
+    if (m.estado !== 'pendiente') return false
+    const dias = Math.round((new Date(m.fechaCierre + 'T00:00:00').getTime() - HOY.getTime()) / (1000 * 60 * 60 * 24))
+    return dias >= 0 && dias <= 7
+  }).length
+
+  const focoDia = atencion.vencidas[0]
+    ? {
+        tipo: 'vencida',
+        etiqueta: 'Prioridad crítica',
+        titulo: 'Recuperar vencidas',
+        detalle: `${atencion.vencidas[0].cliente.nombre || atencion.vencidas[0].cliente.usuario} · ${atencion.vencidas[0].materia.nombre} · ${atencion.vencidas[0].detalle}`,
+        clienteId: atencion.vencidas[0].cliente.id,
+      }
+    : atencion.proximas[0]
+    ? {
+        tipo: 'urgente',
+        etiqueta: 'Siguiente cierre',
+        titulo: 'Preparar entrega cercana',
+        detalle: `${atencion.proximas[0].cliente.nombre || atencion.proximas[0].cliente.usuario} · ${atencion.proximas[0].materia.nombre} · ${atencion.proximas[0].detalle}`,
+        clienteId: atencion.proximas[0].cliente.id,
+      }
+    : atencion.revisar[0]
+    ? {
+        tipo: 'revisar',
+        etiqueta: 'Seguimiento',
+        titulo: 'Revisar calificación',
+        detalle: `${atencion.revisar[0].cliente.nombre || atencion.revisar[0].cliente.usuario} · ${atencion.revisar[0].materia.nombre} · ${atencion.revisar[0].detalle}`,
+        clienteId: atencion.revisar[0].cliente.id,
+      }
+    : atencion.preinscritas[0]
+    ? {
+        tipo: 'preinscrito',
+        etiqueta: 'Activación',
+        titulo: 'Verificar preinscripción',
+        detalle: `${atencion.preinscritas[0].cliente.nombre || atencion.preinscritas[0].cliente.usuario} · ${atencion.preinscritas[0].materia.nombre}`,
+        clienteId: atencion.preinscritas[0].cliente.id,
+      }
+    : null
 
   const filtrados = ordenados.filter(c => {
     const txt = busqueda.toLowerCase()
@@ -208,6 +253,59 @@ export default function Dashboard({ tablaId, onAgregar, onEditar }: Props) {
 
   return (
     <div className="dashboard">
+      <section className="daily-board">
+        <div className={`daily-focus daily-focus--${focoDia?.tipo ?? 'limpio'}`}>
+          <div className="daily-focus-top">
+            <span className="daily-kicker">{focoDia?.etiqueta ?? 'Bitácora al día'}</span>
+            <span className="daily-date">
+              {new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: '2-digit', month: 'short' }).format(new Date())}
+            </span>
+          </div>
+          <h2 className="daily-title">{focoDia?.titulo ?? (hayActivos ? 'Jornada despejada' : 'Listo para empezar')}</h2>
+          <p className="daily-detail">
+            {focoDia?.detalle ?? (hayActivos
+              ? 'No hay cierres críticos ni revisiones pendientes en este momento.'
+              : 'Crea estudiantes y materias para convertir esta vista en tu control diario.')}
+          </p>
+          <div className="daily-actions">
+            {focoDia ? (
+              <button className="daily-primary" onClick={() => irACliente(focoDia.clienteId)}>
+                Abrir registro
+              </button>
+            ) : (
+              <button className="daily-primary" onClick={onAgregar}>
+                Nuevo estudiante
+              </button>
+            )}
+            <span className="daily-meter-label">{totalAtencion} pendiente{totalAtencion !== 1 ? 's' : ''} de atención</span>
+          </div>
+        </div>
+
+        <div className="daily-ledger">
+          <div className="ledger-head">
+            <span>Constancia</span>
+            <strong>{progreso}%</strong>
+          </div>
+          <div className="progress-track" aria-label={`Progreso ${progreso}%`}>
+            <span style={{ width: `${progreso}%` }} />
+          </div>
+          <div className="ledger-grid">
+            <div>
+              <span className="ledger-value">{stats.estudiantes}</span>
+              <span className="ledger-label">Activos</span>
+            </div>
+            <div>
+              <span className="ledger-value">{pendientesSemana}</span>
+              <span className="ledger-label">Semana</span>
+            </div>
+            <div>
+              <span className="ledger-value">{stats.cargadas}</span>
+              <span className="ledger-label">En revisión</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {totalAtencion > 0 ? (
         <div className="atencion">
           <div className="atencion-header">
